@@ -25,7 +25,8 @@ class Game:
             'student': load_images('enemy/student'),
             'background': load_images('background'),
             'bullet': load_images('bullet'),
-            'level_up': load_image('level/level_up_bg.png')
+            'level_up': load_image('level/level_up_bg.png'),
+            'buffs': load_images('level/buffs')
 
         }
 
