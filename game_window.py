@@ -4,7 +4,7 @@ import random
 import math
 
 from scripts.utils import load_image, load_images
-from scripts.entities import Player, Enemy, Bullet, Camera, Background, Chunk, Sprite
+from scripts.entities import Player, Enemy, Bullet, Camera, Background, Chunk, Card
 class Game:
     def __init__(self):
 
@@ -23,7 +23,10 @@ class Game:
             'student': load_images('enemy/student'),
             'background': load_images('background'),
             'bullet': load_images('bullet'),
-            'dmg': load_images('level/buffs/dmg')
+            'dmg': load_images('level/buffs/dmg'),
+            'mvs': load_images('level/buffs/mvs'),
+            'hp': load_images('level/buffs/hp'),
+            'ats': load_images('level/buffs/ats')
 
         }
 
@@ -61,11 +64,13 @@ class Game:
         self.pause_time = 0
         self.run_time = pygame.time.get_ticks() - self.pause_time
 
-        self.dmg = Sprite(self, self.assets['dmg'][0].get_size(), [0,0], 'dmg')
-        self.ats = Sprite(self, self.assets['dmg'][0].get_size(), [0,0], 'dmg')
-        self.mvs = Sprite(self, self.assets['dmg'][0].get_size(), [0,0], 'dmg')
-        self.hp = Sprite(self, self.assets['dmg'][0].get_size(), [0,0], 'dmg')
+        self.dmg = Card(self, self.assets['dmg'][0].get_size(), [0,0], 'dmg')
+        self.ats = Card(self, self.assets['ats'][0].get_size(), [0,0], 'ats')
+        self.mvs = Card(self, self.assets['mvs'][0].get_size(), [0,0], 'mvs')
+        self.hp = Card(self, self.assets['hp'][0].get_size(), [0,0], 'hp')
         self.buff_list = [self.dmg, self.ats, self.mvs, self.hp]
+        self.render_list = []
+        self.cards = []
 
         self.game_state = 'running'
 
@@ -116,6 +121,8 @@ class Game:
                         self.movement[2] = False
                     if event.key == pygame.K_s:
                         self.movement[3] = False
+
+
 
             if self.game_state == 'running':
                 self.update_game()
@@ -315,43 +322,65 @@ class Game:
         card_pos_2 = [(self.display.get_width() // 2 - self.assets['dmg'][0].get_width() // 2), (self.display.get_height() // 2 - self.assets['dmg'][0].get_height() // 2)]
         card_pos_3 = [((((self.display.get_width() // 3) * 2) + (self.display.get_width() // 3) // 2) - self.assets['dmg'][0].get_width() // 2), (self.display.get_height() // 2 - self.assets['dmg'][0].get_height() // 2)]
 
-        cards = []
         card_pos = [card_pos_1, card_pos_2, card_pos_3]
-        render_list = []
 
-        while len(cards) != 3:
+        while len(self.cards) != 3:
             rand = random.randint(0, len(self.buff_list) - 1)
-            if self.buff_list[rand] not in cards:
-                cards.append(self.buff_list[rand])
+            if self.buff_list[rand] not in self.cards:
+                self.cards.append(self.buff_list[rand])
 
-        for index, item in enumerate(cards):
+        for index, item in enumerate(self.cards):
             item.pos = card_pos[index]
-            render_list.append(item)
+            self.render_list.append(item)
 
-        self.buff_00 = render_list[0]
-        self.buff_01 = render_list[1]
-        self.buff_02 = render_list[2]
+        self.buff_00 = self.render_list[0]
+        self.buff_01 = self.render_list[1]
+        self.buff_02 = self.render_list[2]
 
-        self.buff_00.render(self.display, self.camera, 0)
-        self.buff_01.render(self.display, self.camera, 0)
-        self.buff_02.render(self.display, self.camera, 0)
+        self.buff_00.render(self.display, 0)
+        self.buff_01.render(self.display, 0)
+        self.buff_02.render(self.display, 0)
 
         buff_00_rect = self.buff_00.rect()
         buff_01_rect = self.buff_01.rect()
         buff_02_rect = self.buff_02.rect()
 
         if buff_00_rect.collidepoint(pygame.mouse.get_pos()):
-            self.buff_00.render(self.display, self.camera, 1)
+            self.buff_00.render(self.display, 1)
         elif buff_01_rect.collidepoint(pygame.mouse.get_pos()):
-            self.buff_01.render(self.display, self.camera, 1)
+            self.buff_01.render(self.display, 1)
         elif buff_02_rect.collidepoint(pygame.mouse.get_pos()):
-            self.buff_02.render(self.display, self.camera, 1)
+            self.buff_02.render(self.display, 1)
+
+        for event in pygame.event.get():
+
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if buff_00_rect.collidepoint(event.pos):
+                    self.buff_up(self.buff_00)
+                elif buff_01_rect.collidepoint(event.pos):
+                    self.buff_up(self.buff_01)
+                elif buff_02_rect.collidepoint(event.pos):
+                    self.buff_up(self.buff_02)
+
+    def buff_up(self, buff):
+        if buff.asset == 'dmg':
+            self.player.damage += 2
+        elif buff.asset == 'hp':
+            self.player.health += 1
+        elif buff.asset == 'mvs':
+            self.player.mvspd += 0.15
+        elif buff.asset == 'ats':
+            self.player.atkspd += 100
+        self.level_up()
 
     def level_up(self):
         self.player.playerlvl += 1
         self.player.currentXP -= self.player.neededXP
         self.player.neededXP += self.player.neededXP * 0.3
+        self.render_list = []
+        self.cards = []
         print(f'level up: level {self.player.playerlvl}; neededXP {self.player.neededXP}')
+        self.is_running()
 
     def is_running(self):
         self.game_state = 'running'

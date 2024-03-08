@@ -25,8 +25,8 @@ class Player:
         self.invul = False
         self.invul_timer = 0
 
-        self.currentXP = 14
-        self.neededXP = 15
+        self.currentXP = 0
+        self.neededXP = 1
         self.playerlvl = 1
 
     def rect(self):  # this refers to the upper right pixel of the entity
@@ -153,7 +153,7 @@ class Chunk:
         self.pos = list(pos)
 
 
-class Sprite:
+class Card:
     def __init__(self, game, size, pos, asset):
         self.game = game
         self.size = size
@@ -163,9 +163,9 @@ class Sprite:
     def center(self):
         return pygame.Vector2(self.pos[0] + self.size[0] // 2, self.pos[1] + self.size[1] // 2)
 
-    def render(self, surf, camera, index):
+    def render(self, surf, index):
         # Use the camera to adjust the background's position
-        card_pos = camera.apply(self.pos)
+        card_pos = self.pos
         surf.blit(self.game.assets[self.asset][index], card_pos)
 
     def rect(self):  # this refers to the upper right pixel of the entity
