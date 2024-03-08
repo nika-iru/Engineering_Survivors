@@ -19,14 +19,14 @@ class Player:
         self.base_mvspd = 2
         self.mvspd = self.base_mvspd
 
-        self.base_atkspd = 50
+        self.base_atkspd = 2000
         self.atkspd = self.base_atkspd
 
         self.invul = False
         self.invul_timer = 0
 
         self.currentXP = 0
-        self.neededXP = 1
+        self.neededXP = 15
         self.playerlvl = 1
 
     def rect(self):  # this refers to the upper right pixel of the entity
