@@ -25,7 +25,7 @@ class Player:
         self.invul = False
         self.invul_timer = 0
 
-        self.currentXP = 0
+        self.currentXP = 14
         self.neededXP = 15
         self.playerlvl = 1
 
@@ -132,7 +132,7 @@ class Bullet:
         surf.blit(self.game.assets['bullet'][0], bullet_initial_pos)
 
 
-class Sprite:
+class Background:
     def __init__(self, game, size, pos):
         self.game = game
         self.size = size
@@ -146,14 +146,31 @@ class Sprite:
         bg_pos = camera.apply(self.pos)
         surf.blit(self.game.assets[asset][index], bg_pos)
 
-    def rect(self):  # this refers to the upper right pixel of the entity
-        return pygame.Rect(self.pos[0], self.pos[1], self.size[0], self.size[1])
-
 
 class Chunk:
     def __init__(self, game, pos):
         self.game = game
         self.pos = list(pos)
+
+
+class Sprite:
+    def __init__(self, game, size, pos, asset):
+        self.game = game
+        self.size = size
+        self.pos = list(pos)
+        self.asset = asset
+
+    def center(self):
+        return pygame.Vector2(self.pos[0] + self.size[0] // 2, self.pos[1] + self.size[1] // 2)
+
+    def render(self, surf, camera, index):
+        # Use the camera to adjust the background's position
+        card_pos = camera.apply(self.pos)
+        surf.blit(self.game.assets[self.asset][index], card_pos)
+
+    def rect(self):  # this refers to the upper right pixel of the entity
+        return pygame.Rect(self.pos[0], self.pos[1], self.size[0], self.size[1])
+
 
 
 

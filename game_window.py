@@ -4,9 +4,7 @@ import random
 import math
 
 from scripts.utils import load_image, load_images
-from scripts.entities import Player, Enemy, Bullet, Camera, Sprite, Chunk
-
-
+from scripts.entities import Player, Enemy, Bullet, Camera, Background, Chunk, Sprite
 class Game:
     def __init__(self):
 
@@ -25,7 +23,6 @@ class Game:
             'student': load_images('enemy/student'),
             'background': load_images('background'),
             'bullet': load_images('bullet'),
-            'level_up': load_image('level/level_up_bg.png'),
             'dmg': load_images('level/buffs/dmg')
 
         }
@@ -55,7 +52,7 @@ class Game:
 
         bg_size = self.assets['background'][0].get_size()
         bg_pos = (self.display.get_width() // 2 - self.assets['background'][0].get_width() // 2, self.display.get_height() // 2 - self.assets['background'][0].get_height() // 2)
-        self.background = Sprite(self, bg_size, bg_pos)
+        self.background = Background(self, bg_size, bg_pos)
 
         self.load_chunks = []
         self.loaded_chunks = []
@@ -63,6 +60,12 @@ class Game:
         self.second_time = 0
         self.pause_time = 0
         self.run_time = pygame.time.get_ticks() - self.pause_time
+
+        self.dmg = Sprite(self, self.assets['dmg'][0].get_size(), [0,0], 'dmg')
+        self.ats = Sprite(self, self.assets['dmg'][0].get_size(), [0,0], 'dmg')
+        self.mvs = Sprite(self, self.assets['dmg'][0].get_size(), [0,0], 'dmg')
+        self.hp = Sprite(self, self.assets['dmg'][0].get_size(), [0,0], 'dmg')
+        self.buff_list = [self.dmg, self.ats, self.mvs, self.hp]
 
         self.game_state = 'running'
 
@@ -122,12 +125,12 @@ class Game:
                 text = font.render("Paused", True, (0, 0, 0))
                 self.display.blit(text, (self.screen.get_width() // 2 - text.get_width() // 2, self.screen.get_height() // 2 - text.get_height() // 2))
 
+            self.check_player_xp()
+
             self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))
             pygame.display.flip()
 
             '''print(f'Total Run Time: {self.run_time}\nTotal Pause Time: {self.pause_time}\nTotal Tick Time: {pygame.time.get_ticks()}')'''
-
-            print (f'{mouse_x_on_screen}')
 
     def shoot_bullet(self, current_time):
         mouse_x, mouse_y = pygame.mouse.get_pos()
@@ -171,7 +174,7 @@ class Game:
 
         for chunk in self.load_chunks:
             if chunk not in self.loaded_chunks:
-                self.background = Sprite(self, (self.screen.get_width(), self.screen.get_height()), chunk.pos)
+                self.background = Background(self, (self.screen.get_width(), self.screen.get_height()), chunk.pos)
                 self.background.render(self.display, self.camera, 'background', 0)
                 self.loaded_chunks.append(chunk)
                 self.load_chunks.remove(chunk)
@@ -252,15 +255,6 @@ class Game:
             for bullet in bullets_to_remove:
                 self.bullets.remove(bullet)
 
-    def check_player_xp(self):
-
-        if self.player.currentXP >= self.player.neededXP:
-            self.player.playerlvl += 1
-            self.player.currentXP -= self.player.neededXP
-            self.player.neededXP += self.player.neededXP * 0.3
-            self.level_up()
-            print(f'level up: level {self.player.playerlvl}; neededXP {self.player.neededXP}')
-
     def check_player_invul(self):
         player_rect = self.player.rect()
 
@@ -301,7 +295,6 @@ class Game:
         bullets_to_remove = []
         self.bullet_enemy_collision(bullets_to_remove)
         self.remove_bullets(bullets_to_remove)
-        self.check_player_xp()
 
         self.second_time = self.run_time // 1000
 
@@ -311,10 +304,54 @@ class Game:
 
         self.clock.tick(60)
 
-    def level_up(self):
-        self.is_paused()
-        self.level_bg = Sprite(self, (self.assets['level_up'].get_size()),(self.screen.get_width() // 2 - self.assets['level_up'].get_width() // 2, self.screen.get_height() // 2 - self.assets['level_up'].get_height() // 2))
+    def check_player_xp(self):
+        if self.player.currentXP >= self.player.neededXP:
+            self.select_buff()
 
+    def select_buff(self):
+        self.is_paused()
+
+        card_pos_1 = [((self.display.get_width() // 3) / 2 - self.assets['dmg'][0].get_width() // 2), (self.display.get_height() // 2 - self.assets['dmg'][0].get_height() // 2)]
+        card_pos_2 = [(self.display.get_width() // 2 - self.assets['dmg'][0].get_width() // 2), (self.display.get_height() // 2 - self.assets['dmg'][0].get_height() // 2)]
+        card_pos_3 = [((((self.display.get_width() // 3) * 2) + (self.display.get_width() // 3) // 2) - self.assets['dmg'][0].get_width() // 2), (self.display.get_height() // 2 - self.assets['dmg'][0].get_height() // 2)]
+
+        cards = []
+        card_pos = [card_pos_1, card_pos_2, card_pos_3]
+        render_list = []
+
+        while len(cards) != 3:
+            rand = random.randint(0, len(self.buff_list) - 1)
+            if self.buff_list[rand] not in cards:
+                cards.append(self.buff_list[rand])
+
+        for index, item in enumerate(cards):
+            item.pos = card_pos[index]
+            render_list.append(item)
+
+        self.buff_00 = render_list[0]
+        self.buff_01 = render_list[1]
+        self.buff_02 = render_list[2]
+
+        self.buff_00.render(self.display, self.camera, 0)
+        self.buff_01.render(self.display, self.camera, 0)
+        self.buff_02.render(self.display, self.camera, 0)
+
+        buff_00_rect = self.buff_00.rect()
+        buff_01_rect = self.buff_01.rect()
+        buff_02_rect = self.buff_02.rect()
+
+        if buff_00_rect.collidepoint(pygame.mouse.get_pos()):
+            self.buff_00.render(self.display, self.camera, 1)
+        elif buff_01_rect.collidepoint(pygame.mouse.get_pos()):
+            self.buff_01.render(self.display, self.camera, 1)
+        elif buff_02_rect.collidepoint(pygame.mouse.get_pos()):
+            self.buff_02.render(self.display, self.camera, 1)
+
+    def level_up(self):
+        self.player.playerlvl += 1
+        self.player.currentXP -= self.player.neededXP
+        self.player.neededXP += self.player.neededXP * 0.3
+        print(f'level up: level {self.player.playerlvl}; neededXP {self.player.neededXP}')
 
     def is_running(self):
         self.game_state = 'running'

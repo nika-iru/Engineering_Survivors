@@ -5,7 +5,6 @@ from scripts.menu_utils import Button
 import game_window
 
 
-
 class Menu:
     def __init__(self):
         pygame.init()
