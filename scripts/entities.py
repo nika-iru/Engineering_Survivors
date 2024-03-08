@@ -109,7 +109,7 @@ class Enemy:
         surf.blit(self.game.assets['student'][0], enemy_pos_on_screen)
 
 
-class Bullet: # CHANGE BULLETS TO RECTANGLES FOR EASIER COLLISION
+class Bullet:
     def __init__(self, game, pos, size, speed, interval, remove, direction):
         self.game = game
         self.pos = list(pos)
@@ -145,6 +145,9 @@ class Sprite:
         # Use the camera to adjust the background's position
         bg_pos = camera.apply(self.pos)
         surf.blit(self.game.assets[asset][index], bg_pos)
+
+    def rect(self):  # this refers to the upper right pixel of the entity
+        return pygame.Rect(self.pos[0], self.pos[1], self.size[0], self.size[1])
 
 
 class Chunk:

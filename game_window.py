@@ -26,13 +26,13 @@ class Game:
             'background': load_images('background'),
             'bullet': load_images('bullet'),
             'level_up': load_image('level/level_up_bg.png'),
-            'buffs': load_images('level/buffs')
+            'dmg': load_images('level/buffs/dmg')
 
         }
 
         # player initialization
         player_size = self.assets['player'][0].get_size()
-        player_pos = (self.screen.get_height() // 2 - player_size[0] // 2, self.screen.get_height() // 2 - player_size[1] // 2)
+        player_pos = (self.screen.get_width() // 2 - player_size[0] // 2, self.screen.get_height() // 2 - player_size[1] // 2)
         self.player = Player(self, player_pos, player_size)
         self.camera = Camera(self, self.player.center())
         # player movement
@@ -54,7 +54,7 @@ class Game:
         self.spawn_timer = pygame.time.get_ticks()
 
         bg_size = self.assets['background'][0].get_size()
-        bg_pos = (0, 0)
+        bg_pos = (self.display.get_width() // 2 - self.assets['background'][0].get_width() // 2, self.display.get_height() // 2 - self.assets['background'][0].get_height() // 2)
         self.background = Sprite(self, bg_size, bg_pos)
 
         self.load_chunks = []
@@ -127,6 +127,8 @@ class Game:
 
             '''print(f'Total Run Time: {self.run_time}\nTotal Pause Time: {self.pause_time}\nTotal Tick Time: {pygame.time.get_ticks()}')'''
 
+            print (f'{mouse_x_on_screen}')
+
     def shoot_bullet(self, current_time):
         mouse_x, mouse_y = pygame.mouse.get_pos()
         direction = self.camera.apply_inverse(pygame.Vector2(mouse_x, mouse_y))
@@ -157,19 +159,19 @@ class Game:
     def chunks_to_load(self):
         chunk_left = self.check_current_chunk()[0]
         chunk_top = self.check_current_chunk()[1]
-        self.load_chunks.append(Chunk(self, (chunk_left - self.screen.get_height(), chunk_top - self.screen.get_height())))
+        self.load_chunks.append(Chunk(self, (chunk_left - self.screen.get_width(), chunk_top - self.screen.get_height())))
         self.load_chunks.append(Chunk(self, (chunk_left, chunk_top - self.screen.get_height())))
-        self.load_chunks.append(Chunk(self, (chunk_left + self.screen.get_height(), chunk_top - self.screen.get_height())))
-        self.load_chunks.append(Chunk(self, (chunk_left - self.screen.get_height(), chunk_top)))
+        self.load_chunks.append(Chunk(self, (chunk_left + self.screen.get_width(), chunk_top - self.screen.get_height())))
+        self.load_chunks.append(Chunk(self, (chunk_left - self.screen.get_width(), chunk_top)))
         self.load_chunks.append(Chunk(self, (chunk_left, chunk_top)))
-        self.load_chunks.append(Chunk(self, (chunk_left + self.screen.get_height(), chunk_top)))
-        self.load_chunks.append(Chunk(self, (chunk_left - self.screen.get_height(), chunk_top + self.screen.get_height())))
+        self.load_chunks.append(Chunk(self, (chunk_left + self.screen.get_width(), chunk_top)))
+        self.load_chunks.append(Chunk(self, (chunk_left - self.screen.get_width(), chunk_top + self.screen.get_height())))
         self.load_chunks.append(Chunk(self, (chunk_left, chunk_top + self.screen.get_height())))
-        self.load_chunks.append(Chunk(self, (chunk_left + self.screen.get_height(), chunk_top + self.screen.get_height())))
+        self.load_chunks.append(Chunk(self, (chunk_left + self.screen.get_width(), chunk_top + self.screen.get_height())))
 
         for chunk in self.load_chunks:
             if chunk not in self.loaded_chunks:
-                self.background = Sprite(self, (self.screen.get_height(), self.screen.get_height()), chunk.pos)
+                self.background = Sprite(self, (self.screen.get_width(), self.screen.get_height()), chunk.pos)
                 self.background.render(self.display, self.camera, 'background', 0)
                 self.loaded_chunks.append(chunk)
                 self.load_chunks.remove(chunk)
@@ -311,6 +313,8 @@ class Game:
 
     def level_up(self):
         self.is_paused()
+        self.level_bg = Sprite(self, (self.assets['level_up'].get_size()),(self.screen.get_width() // 2 - self.assets['level_up'].get_width() // 2, self.screen.get_height() // 2 - self.assets['level_up'].get_height() // 2))
+
 
     def is_running(self):
         self.game_state = 'running'
