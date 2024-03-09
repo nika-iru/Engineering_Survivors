@@ -33,7 +33,7 @@ class Cloud:
     def render(self, surf, index, asset):
         # Use the camera to adjust the background's position
         cloud_pos = self.pos
-        surf.blit(pygame.transform.scale(self.game.assets[asset][index], surf.get_size()), cloud_pos)
+        surf.blit(pygame.transform.scale(self.game.assets[asset][index], ((self.game.assets[asset][index].get_width() * 3), (self.game.assets[asset][index].get_height() * 3))), cloud_pos)
 
     def rect(self):  # this refers to the upper right pixel of the entity
         return pygame.Rect(self.pos[0], self.pos[1], self.size[0], self.size[1])

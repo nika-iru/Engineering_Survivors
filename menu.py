@@ -36,15 +36,16 @@ class Menu:
         self.game_instance = game_window.Game()
 
         self.current_state = 'Menu'
-
-        self.current_time = 0
-
+        
+        self.run_time = pygame.time.get_ticks()
+        self.spawn_cloud = pygame.time.get_ticks()
         self.clouds = []
-
+        
         self.bgm = 'paused'
 
     def run(self):
         while True:
+            self.run_time = pygame.time.get_ticks()
 
             if self.bgm != 'playing':
                 self.play_bgm()
@@ -52,8 +53,11 @@ class Menu:
 
             self.display.blit(pygame.transform.scale(self.assets['menu_bg'], self.screen.get_size()), (0, 0))
 
+            current_time = self.run_time
+            self.render(current_time)
+
             for cloud in self.clouds:
-                cloud.render(self.display, cloud.index)
+                cloud.render(self.display, cloud.index, cloud.asset)
                 cloud.update()
 
             play_rect = self.play.rect()
@@ -106,15 +110,17 @@ class Menu:
         pygame.mixer.music.play(10)
 
     def render(self, current_time):
-        current_time = pygame.time.get_ticks() - current_time
-        if pygame.time.get_ticks() - current_time <= 0:
+        cloud_interval = 2000
+        print(f'{current_time - self.spawn_cloud} >= {cloud_interval}')
+        if current_time - self.spawn_cloud >= cloud_interval:
             cloud_select = random.randint(0, 2)
             if cloud_select == 0:
-                self.clouds.append(Cloud(self, self.assets['clouds'][0].get_size(), (540, random.randint(0, 140)),'clouds', 0, 3.5))
+                self.clouds.append(Cloud(self, self.assets['clouds'][0].get_size(), (950, random.randint(0, 140)),'clouds', 0, 30))
             if cloud_select == 1:
-                self.clouds.append(Cloud(self, self.assets['clouds'][1].get_size(), (540, random.randint(0, 140)),'clouds', 1, 2.5))
+                self.clouds.append(Cloud(self, self.assets['clouds'][1].get_size(), (950, random.randint(0, 140)),'clouds', 1, 25))
             if cloud_select == 2:
-                self.clouds.append(Cloud(self, self.assets['clouds'][2].get_size(), (540, random.randint(0, 140)), 'clouds', 2, 1.5))
+                self.clouds.append(Cloud(self, self.assets['clouds'][2].get_size(), (950, random.randint(0, 140)), 'clouds', 2, 20))
+            self.spawn_cloud = current_time
 
 
 Menu().run()
