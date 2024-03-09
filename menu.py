@@ -2,8 +2,7 @@ import pygame
 import sys
 import random
 from scripts.utils import load_image, load_images, load_music
-from scripts.menu_utils import Button
-from scripts.entities import Cloud, Camera
+from scripts.menu_utils import Button, Cloud
 import game_window
 
 
