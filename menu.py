@@ -47,17 +47,15 @@ class Menu:
     def run(self):
         while True:
 
-            print(self.bgm)
-
             if self.bgm != 'playing':
                 self.play_bgm()
                 self.bgm = 'playing'
 
+            self.display.blit(pygame.transform.scale(self.assets['menu_bg'], self.screen.get_size()), (0, 0))
+
             for cloud in self.clouds:
                 cloud.render(self.display, cloud.index)
                 cloud.update()
-
-            self.display.blit(pygame.transform.scale(self.assets['menu_bg'], self.screen.get_size()), (0, 0))
 
             play_rect = self.play.rect()
             exit_rect = self.exit.rect()
