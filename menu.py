@@ -1,7 +1,7 @@
 import pygame
 import sys
 import random
-from scripts.utils import load_image, load_images, load_music
+from scripts.utils import load_image, load_images, load_music, load_sfx
 from scripts.menu_utils import Button, Cloud
 import game_window
 
@@ -23,7 +23,8 @@ class Menu:
             'exit': load_images('menu/button/exit'),
             'clouds': load_images('menu/clouds'),
             'menu_bg': load_image('menu/menu_bg.png'),
-            'menu_bgm': load_music('menu/constant_moderato.mp3')
+            'menu_bgm': load_music('menu/constant_moderato.mp3'),
+            'hover': load_sfx('sfx/hover.mp3')
 
         }
 
@@ -43,6 +44,8 @@ class Menu:
         self.clouds_to_remove = []
         
         self.bgm = 'paused'
+
+        self.is_hovered = False
 
     def run(self):
         while True:
@@ -88,6 +91,11 @@ class Menu:
             else:
                 self.exit.render(self.display, 'exit', 0)
 
+            if play_rect.collidepoint(pygame.mouse.get_pos()) or exit_rect.collidepoint(pygame.mouse.get_pos()):
+                self.hover()
+            else:
+                self.is_hovered = False
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -95,6 +103,7 @@ class Menu:
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if play_rect.collidepoint(event.pos):
                         self.current_state = 'Game'  # Switch to the Game state
+                        pygame.mixer.music.stop()
                     elif exit_rect.collidepoint(event.pos):
                         pygame.quit()
                         sys.exit()
@@ -114,13 +123,12 @@ class Menu:
 
     def render(self, current_time):
         cloud_interval = 4000
-        print(f'{current_time - self.spawn_cloud} >= {cloud_interval}')
         if current_time - self.spawn_cloud >= cloud_interval:
             cloud_select = random.randint(0, 2)
             if cloud_select == 0:
                 self.clouds.append(Cloud(self, self.assets['clouds'][0].get_size(), (950, random.randint(0, 100)),'clouds', 0, random.uniform(0.8, 1.8)))
             if cloud_select == 1:
-                self.clouds.append(Cloud(self, self.assets['clouds'][1].get_size(), (950, random.randint(0, 100)),'clouds', 1, random.uniform(0.3, 1.3)))
+                self.clouds.append(Cloud(self, self.assets['clouds'][1].get_size(), (950, random.randint(0, 50)),'clouds', 1, random.uniform(0.3, 1.3)))
             if cloud_select == 2:
                 self.clouds.append(Cloud(self, self.assets['clouds'][2].get_size(), (950, random.randint(0, 100)), 'clouds', 2, random.uniform(1.3, 2.3)))
             self.spawn_cloud = current_time
@@ -134,5 +142,9 @@ class Menu:
             for cloud in self.clouds_to_remove:
                 self.clouds_to_remove.remove(cloud)
 
+    def hover(self):
+        if self.is_hovered == False:
+            self.assets['hover'].play()
+            self.is_hovered = True
 
 Menu().run()

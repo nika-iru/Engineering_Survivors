@@ -6,6 +6,8 @@ BASE_IMG_PATH = 'data/img/'
 
 BASE_MUSIC_PATH = 'data/music/'
 
+BASE_SFX_PATH = 'data/music/'
+
 pygame.mixer.init()
 
 def load_image(path):
@@ -22,3 +24,8 @@ def load_images(path): # used to load everything in one folder
 def load_music(path):
     music = BASE_MUSIC_PATH + path
     return music
+
+def load_sfx(path):
+    sfx_path = BASE_SFX_PATH + path
+    sfx = pygame.mixer.Sound(sfx_path)
+    return sfx
