@@ -1,13 +1,16 @@
 import pygame
 import sys
-from scripts.utils import load_image, load_images
+import random
+from scripts.utils import load_image, load_images, load_music
 from scripts.menu_utils import Button
+from scripts.entities import Cloud, Camera
 import game_window
 
 
 class Menu:
     def __init__(self):
         pygame.init()
+        pygame.mixer.init()
 
         self.screen = pygame.display.set_mode((960, 540))
         pygame.display.set_caption('Main Menu')
@@ -19,7 +22,9 @@ class Menu:
             'select': load_image('menu/selector.png'),
             'play': load_images('menu/button/play'),
             'exit': load_images('menu/button/exit'),
-            'menu_bg': load_image('menu/menu_bg.png')
+            'clouds': load_images('menu/clouds'),
+            'menu_bg': load_image('menu/menu_bg.png'),
+            'menu_bgm': load_music('menu/constant_moderato.mp3')
 
         }
 
@@ -33,8 +38,24 @@ class Menu:
 
         self.current_state = 'Menu'
 
+        self.current_time = 0
+
+        self.clouds = []
+
+        self.bgm = 'paused'
+
     def run(self):
         while True:
+
+            print(self.bgm)
+
+            if self.bgm != 'playing':
+                self.play_bgm()
+                self.bgm = 'playing'
+
+            for cloud in self.clouds:
+                cloud.render(self.display, cloud.index)
+                cloud.update()
 
             self.display.blit(pygame.transform.scale(self.assets['menu_bg'], self.screen.get_size()), (0, 0))
 
@@ -81,6 +102,22 @@ class Menu:
 
             pygame.display.update()
             self.clock.tick(60)
+
+    def play_bgm(self):
+        pygame.mixer.music.load(self.assets['menu_bgm'])
+        pygame.mixer.music.set_volume(0.6)
+        pygame.mixer.music.play(10)
+
+    def render(self, current_time):
+        current_time = pygame.time.get_ticks() - current_time
+        if pygame.time.get_ticks() - current_time <= 0:
+            cloud_select = random.randint(0, 2)
+            if cloud_select == 0:
+                self.clouds.append(Cloud(self, self.assets['clouds'][0].get_size(), (540, random.randint(0, 140)),'clouds', 0, 3.5))
+            if cloud_select == 1:
+                self.clouds.append(Cloud(self, self.assets['clouds'][1].get_size(), (540, random.randint(0, 140)),'clouds', 1, 2.5))
+            if cloud_select == 2:
+                self.clouds.append(Cloud(self, self.assets['clouds'][2].get_size(), (540, random.randint(0, 140)), 'clouds', 2, 1.5))
 
 
 Menu().run()

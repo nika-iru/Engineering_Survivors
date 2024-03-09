@@ -194,11 +194,6 @@ class Game:
                     self.load_chunks.remove(chunk)
 
     def spawn_enemies_easy(self, current_time):
-        # enemy initialization
-        chunk_left = self.check_current_chunk()[0]
-        chunk_right = self.check_current_chunk()[0] + (self.screen.get_width() * 2)
-        chunk_top = self.check_current_chunk()[1]
-        chunk_bottom = self.check_current_chunk()[1] + (self.screen.get_height() * 2)
 
         spawn_interval = 3000
 
@@ -214,23 +209,31 @@ class Game:
 
                 if side == 'left':
                     enemy_pos = [
-                        random.randint(chunk_left - self.screen.get_width(), chunk_left),
-                        random.randint(chunk_top, chunk_bottom)
+                        random.randint((int(self.player.pos[0]) - self.screen.get_width() // 2) * 2,
+                                       (int(self.player.pos[0]) - self.screen.get_width() // 2)),
+                        random.randint((int(self.player.pos[1]) - self.screen.get_height() // 2) * 2,
+                                       (int(self.player.pos[1]) + self.screen.get_height() // 2) * 2)
                     ]
                 elif side == 'right':
                     enemy_pos = [
-                        random.randint(chunk_right, chunk_right + self.screen.get_width()),
-                        random.randint(chunk_top, chunk_bottom)
+                        random.randint((int(self.player.pos[0]) + self.screen.get_width() // 2),
+                                       (int(self.player.pos[0]) + self.screen.get_width() // 2) *2),
+                        random.randint((int(self.player.pos[1]) - self.screen.get_height() // 2) * 2,
+                                       (int(self.player.pos[1]) + self.screen.get_height() // 2) * 2)
                     ]
                 elif side == 'top':
                     enemy_pos = [
-                        random.randint(chunk_left, chunk_right),
-                        random.randint(chunk_top - self.screen.get_height(), chunk_top)
+                        random.randint((int(self.player.pos[0]) - self.screen.get_width() // 2) * 2,
+                                       (int(self.player.pos[0]) + self.screen.get_width() // 2) * 2),
+                        random.randint((int(self.player.pos[1]) - self.screen.get_height() // 2) * 2,
+                                       (int(self.player.pos[1]) - self.screen.get_height() // 2))
                     ]
                 elif side == 'bottom':
                     enemy_pos = [
-                        random.randint(chunk_left, chunk_right),
-                        random.randint(chunk_bottom, chunk_bottom + self.screen.get_height())
+                        random.randint((int(self.player.pos[0]) - self.screen.get_width() // 2) * 2,
+                                       (int(self.player.pos[0]) + self.screen.get_width() // 2) * 2),
+                        random.randint((int(self.player.pos[1]) + self.screen.get_height() // 2),
+                                       (int(self.player.pos[1]) + self.screen.get_height() // 2) * 2)
                     ]
 
                 self.enemies.append(Enemy(self, enemy_pos, student_size, student_hp, student_speed, student_xp_worth))
@@ -258,7 +261,7 @@ class Game:
             if abs(math.atan2(self.player.pos[1] - bullet.pos[1], self.player.pos[0] - bullet.pos[0])) == 1000:
                 bullets_to_remove.append(bullet)
 
-        if bullets_to_remove:
+        if len(bullets_to_remove) != 0:
             for bullet in bullets_to_remove:
                 self.bullets.remove(bullet)
 
@@ -370,13 +373,13 @@ class Game:
         elif buff.asset == 'mvs':
             self.player.mvspd += 0.15
         elif buff.asset == 'ats':
-            self.player.atkspd += 100
+            self.player.atkspd -= (self.player.atkspd*0.)
         self.level_up()
 
     def level_up(self):
         self.player.playerlvl += 1
         self.player.currentXP -= self.player.neededXP
-        self.player.neededXP += self.player.neededXP * 0.3
+        self.player.neededXP += math.ceil(self.player.neededXP * 0.3)
         self.render_list = []
         self.cards = []
         print(f'level up: level {self.player.playerlvl}; neededXP {self.player.neededXP}')
