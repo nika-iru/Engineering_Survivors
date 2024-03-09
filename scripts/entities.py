@@ -30,7 +30,7 @@ class Player:
         self.playerlvl = 1
 
     def rect(self):  # this refers to the upper right pixel of the entity
-        return pygame.Rect(self.pos[0], self.pos[1], self.size[0], self.size[1])
+        return pygame.Rect(self.pos[0], (self.pos[1] + self.size[1] // 2), self.size[0], self.size[1] // 2)
 
     def update(self, movement = (0, 0)):
         dx, dy = movement
@@ -53,10 +53,15 @@ class Player:
         return pygame.Vector2(self.pos[0] + self.size[0] // 2, self.pos[1] + self.size[1] // 2)
 
     def render(self, surf, camera, mouse_x):
-        # Use the camera to adjust the player's position
         player_pos_on_screen = camera.apply(self.pos)
+
+        # Hitbox for debugging
+        pygame.draw.rect(surf, (255, 0, 0), pygame.Rect(player_pos_on_screen[0], (player_pos_on_screen[1] + self.size[1] // 2), self.size[0], self.size[1] // 2), 2)
+        pygame.draw.rect(surf, (255, 255, 255),pygame.Rect(self.pos[0], (self.pos[1] + self.size[1] // 2), self.size[0], self.size[1] // 2), 2)
+
         player_flipped = pygame.transform.flip(self.game.assets['player'][0], True, False).convert_alpha()
-        player_flipped.set_colorkey((255,255,255))
+        player_flipped.set_colorkey((255, 255, 255))
+
         if mouse_x > self.pos[0]:
             surf.blit(player_flipped, player_pos_on_screen)
         if mouse_x < self.pos[0]:
@@ -68,6 +73,7 @@ class Player:
         if not self.invul:
             self.health -= damage
             self.mvspd += mvspd_buff
+            print('dmg taken')
 
     def apply_invulnerability(self):
         self.invul = True
@@ -87,13 +93,15 @@ class Camera:
 
 
 class Enemy:
-    def __init__(self, game, pos, size, eHP, eSpd, xpWorth):
+    def __init__(self, game, pos, size, eHP, eSpd, xpWorth, asset, index):
         self.game = game
         self.pos = list(pos)
         self.size = size
         self.eHP = eHP
         self.eSpd = eSpd
         self.eXP = xpWorth
+        self.asset = asset
+        self.index = index
 
     def rect(self):  # this refers to the upper right pixel of the entity
         return pygame.Rect(self.pos[0], self.pos[1], self.size[0], self.size[1])
@@ -103,10 +111,29 @@ class Enemy:
         self.pos[0] += self.eSpd * math.cos(angle_to_player)
         self.pos[1] += self.eSpd * math.sin(angle_to_player)
 
-    def render(self, surf, camera):
+        for other_enemy in self.game.enemies:
+            if other_enemy != self:
+                if self.rect().colliderect(other_enemy.rect()):
+                    if self.pos[0] < other_enemy.pos[0]:
+                        self.pos[0] -= self.eSpd
+                    else:
+                        self.pos[0] += self.eSpd
+
+                    if self.pos[1] < other_enemy.pos[1]:
+                        self.pos[1] -= self.eSpd
+                    else:
+                        self.pos[1] += self.eSpd
+
+
+    def render(self, surf, camera, player):
         # Use the camera to adjust the player's position
         enemy_pos_on_screen = camera.apply(self.pos)
-        surf.blit(self.game.assets['student'][0], enemy_pos_on_screen)
+        enemy_flipped = pygame.transform.flip(self.game.assets[self.asset][self.index], True, False).convert_alpha()
+        enemy_flipped.set_colorkey((255, 255, 255))
+        if player.pos[0] > self.pos[0]:
+            surf.blit(enemy_flipped, enemy_pos_on_screen)
+        if player.pos[0] < self.pos[0]:
+            surf.blit(self.game.assets[self.asset][self.index], enemy_pos_on_screen)
 
 
 class Bullet:
