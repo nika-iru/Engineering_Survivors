@@ -40,6 +40,7 @@ class Menu:
         self.run_time = pygame.time.get_ticks()
         self.spawn_cloud = pygame.time.get_ticks()
         self.clouds = []
+        self.clouds_to_remove = []
         
         self.bgm = 'paused'
 
@@ -59,6 +60,8 @@ class Menu:
             for cloud in self.clouds:
                 cloud.render(self.display, cloud.index, cloud.asset)
                 cloud.update()
+
+            self.remove_clouds()
 
             play_rect = self.play.rect()
             exit_rect = self.exit.rect()
@@ -110,17 +113,26 @@ class Menu:
         pygame.mixer.music.play(10)
 
     def render(self, current_time):
-        cloud_interval = 2000
+        cloud_interval = 4000
         print(f'{current_time - self.spawn_cloud} >= {cloud_interval}')
         if current_time - self.spawn_cloud >= cloud_interval:
             cloud_select = random.randint(0, 2)
             if cloud_select == 0:
-                self.clouds.append(Cloud(self, self.assets['clouds'][0].get_size(), (950, random.randint(0, 140)),'clouds', 0, 30))
+                self.clouds.append(Cloud(self, self.assets['clouds'][0].get_size(), (950, random.randint(0, 100)),'clouds', 0, random.uniform(0.8, 1.8)))
             if cloud_select == 1:
-                self.clouds.append(Cloud(self, self.assets['clouds'][1].get_size(), (950, random.randint(0, 140)),'clouds', 1, 25))
+                self.clouds.append(Cloud(self, self.assets['clouds'][1].get_size(), (950, random.randint(0, 100)),'clouds', 1, random.uniform(0.3, 1.3)))
             if cloud_select == 2:
-                self.clouds.append(Cloud(self, self.assets['clouds'][2].get_size(), (950, random.randint(0, 140)), 'clouds', 2, 20))
+                self.clouds.append(Cloud(self, self.assets['clouds'][2].get_size(), (950, random.randint(0, 100)), 'clouds', 2, random.uniform(1.3, 2.3)))
             self.spawn_cloud = current_time
+
+    def remove_clouds(self):
+        for cloud in self.clouds:
+            if cloud.pos[0] <= (0 - self.assets[cloud.asset][cloud.index].get_width()):
+                self.clouds_to_remove.append(cloud)
+
+        if self.clouds_to_remove:
+            for cloud in self.clouds_to_remove:
+                self.clouds_to_remove.remove(cloud)
 
 
 Menu().run()

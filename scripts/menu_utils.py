@@ -25,7 +25,7 @@ class Cloud:
         self.pos = list(pos)
         self.asset = asset
         self.index = index
-        self.speed = 0
+        self.speed = speed
 
     def center(self):
         return pygame.Vector2(self.pos[0] + self.size[0] // 2, self.pos[1] + self.size[1] // 2)
