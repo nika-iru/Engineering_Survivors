@@ -5,6 +5,7 @@ import math
 
 from scripts.utils import load_image, load_images, load_music, load_sfx
 from scripts.entities import Player, Enemy, Bullet, Camera, Background, Chunk, Card, Sprite
+from scripts.menu_utils import Button
 class Game:
     def __init__(self):
 
@@ -34,6 +35,8 @@ class Game:
             'sht': load_images('level/buffs/sht'),
             'dsh': load_images('level/buffs/dsh'),
             'health': load_image('sprites/hp.png'),
+
+            'exit': load_images('menu/button/exit'),
 
             'bgm': load_music('bgm/usagi_flap.mp3'),
             'boss_bgm': load_music('boss/unwelcome_school.mp3')
@@ -112,6 +115,10 @@ class Game:
         self.game_state = 'running'
         self.boss_fight = False
 
+        self.exit = Button(self, self.assets['exit'][0].get_size(), (
+            (960 // 2 - self.assets['exit'][0].get_width() // 2),
+            (540 // 2 - self.assets['exit'][0].get_height()) + 210))
+
     def run(self):
         while True:
 
@@ -184,6 +191,8 @@ class Game:
                 font = pygame.font.Font(None, 128)
                 text = font.render("Paused", True, (0, 0, 0))
                 self.display.blit(text, (self.screen.get_width() // 2 - text.get_width() // 2, self.screen.get_height() // 2 - text.get_height() // 2))
+
+                self.paused()
 
             self.check_player_xp()
 
@@ -292,6 +301,7 @@ class Game:
                     print(f'enemy hp - {self.player.damage}')
                     if enemy.eHP <= 0:
                         self.player.currentXP += enemy.eXP
+                        self.player.totalXP += enemy.eXP
                         print(f'xp + {enemy.eXP}; currentxp {self.player.currentXP}; neededxp {self.player.neededXP}')
                         self.enemies.remove(enemy)
                     bullets_to_remove.append(bullet)
@@ -429,7 +439,7 @@ class Game:
                 self.spawn_enemies_guard(current_time)
                 self.spawn_enemies_staff(current_time)
 
-        if self.second_time >= 8 and self.boss_fight == False:
+        if self.second_time >= 420 and self.boss_fight == False:
             self.boss_fight = True
             for enemy in self.enemies:
                 try:
@@ -461,18 +471,19 @@ class Game:
         self.clock.tick(60)
 
     def check_player_xp(self):
+
         if self.player.currentXP >= self.player.neededXP:
+            if self.game_state == 'running':
+                self.is_paused()
             self.select_buff()
 
     def select_buff(self):
-        self.is_paused()
 
         if self.player.bullets_per_shot == 3:
             try:
                 self.buff_list.remove(self.sht)
             except ValueError:
                 pass
-        print(self.buff_list)
 
         card_pos_1 = [((self.display.get_width() // 3) / 2 - self.assets['dmg'][0].get_width() // 2), (self.display.get_height() // 2 - self.assets['dmg'][0].get_height() // 2)]
         card_pos_2 = [(self.display.get_width() // 2 - self.assets['dmg'][0].get_width() // 2), (self.display.get_height() // 2 - self.assets['dmg'][0].get_height() // 2)]
@@ -718,7 +729,7 @@ class Game:
 
         pygame.mixer.music.stop()
         pygame.mixer.music.load(self.assets['boss_bgm'])
-        pygame.mixer.music.play(loops=-1)
+        pygame.mixer.music.play(-1)
 
         if side == 'left':
             enemy_pos = [
@@ -737,3 +748,17 @@ class Game:
 
         self.enemies.append(
             Enemy(self, enemy_pos, boss_size, boss_hp, boss_speed, boss_xp_worth, 'boss', 0))
+
+    def paused(self):
+
+        exit_rect = self.exit.rect()
+
+        if exit_rect.collidepoint(pygame.mouse.get_pos()):
+            self.exit.render(self.display, 'exit', 1)
+        else:
+            self.exit.render(self.display, 'exit', 0)
+
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if exit_rect.collidepoint(event.pos):
+                    pass

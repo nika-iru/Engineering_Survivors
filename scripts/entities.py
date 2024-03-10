@@ -13,7 +13,7 @@ class Player:
         self.base_hp = 4
         self.health = self.base_hp
 
-        self.base_damage = 3
+        self.base_damage = 10
         self.damage = self.base_damage
 
         self.base_mvspd = 3
@@ -34,6 +34,7 @@ class Player:
         self.currentXP = 0
         self.neededXP = 15
         self.playerlvl = 1
+        self.totalXP = 0
 
     def rect(self):  # this refers to the upper right pixel of the entity
         return pygame.Rect(self.pos[0], (self.pos[1]), self.size[0], self.size[1])

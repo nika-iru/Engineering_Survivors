@@ -26,12 +26,14 @@ class Menu:
             'menu_bg': load_image('menu/menu_bg.png'),
             'menu_bgm': load_music('menu/constant_moderato.mp3'),
             'hover': load_sfx('sfx/hover.mp3'),
-            'bgm':load_music('bgm/usagi_flap.mp3')
+            'bgm': load_music('bgm/usagi_flap.mp3')
 
         }
 
-        self.play = Button(self, self.assets['play'][0].get_size(), ((960 // 2 - self.assets['play'][0].get_width() // 2), (540 // 2 - self.assets['play'][0].get_height()) + 90))
-        self.exit = Button(self, self.assets['exit'][0].get_size(), ((960 // 2 - self.assets['exit'][0].get_width() // 2), (540 // 2 - self.assets['exit'][0].get_height()) + 210))
+        self.play = Button(self, self.assets['play'][0].get_size(), (
+        (960 // 2 - self.assets['play'][0].get_width() // 2), (540 // 2 - self.assets['play'][0].get_height()) + 90))
+        self.exit = Button(self, self.assets['exit'][0].get_size(), (
+        (960 // 2 - self.assets['exit'][0].get_width() // 2), (540 // 2 - self.assets['exit'][0].get_height()) + 210))
         self.select = Button(self, self.assets['select'].get_size(), (0, 0))
 
         self.clock = pygame.time.Clock()
@@ -39,12 +41,12 @@ class Menu:
         self.game_instance = game_window.Game()
 
         self.current_state = 'Menu'
-        
+
         self.run_time = pygame.time.get_ticks()
         self.spawn_cloud = pygame.time.get_ticks()
         self.clouds = []
         self.clouds_to_remove = []
-        
+
         self.bgm = 'paused'
 
         self.is_hovered = False
@@ -75,8 +77,9 @@ class Menu:
                 self.play.render(self.display, 'play', 1)
 
                 self.select.pos = (
-                (960 // 2 - self.assets['select'].get_width() // 2) - (self.assets['play'][0].get_width() // 2) - 30,
-                (540 // 2 - self.assets['select'].get_height()) + 80)
+                    (960 // 2 - self.assets['select'].get_width() // 2) - (
+                                self.assets['play'][0].get_width() // 2) - 30,
+                    (540 // 2 - self.assets['select'].get_height()) + 80)
 
                 self.select.select(self.display)
             else:
@@ -86,8 +89,9 @@ class Menu:
                 self.exit.render(self.display, 'exit', 1)
 
                 self.select.pos = (
-                (960 // 2 - self.assets['select'].get_width() // 2) - (self.assets['play'][0].get_width() // 2) - 30,
-                (540 // 2 - self.assets['select'].get_height()) + 200)
+                    (960 // 2 - self.assets['select'].get_width() // 2) - (
+                                self.assets['play'][0].get_width() // 2) - 30,
+                    (540 // 2 - self.assets['select'].get_height()) + 200)
 
                 self.select.select(self.display)
             else:
@@ -117,6 +121,7 @@ class Menu:
                 pygame.mixer.music.set_volume(0.3)
                 pygame.mixer.music.play()
                 self.game_instance.run()
+                # Run the game loop
 
             pygame.display.update()
             self.clock.tick(60)
@@ -131,11 +136,17 @@ class Menu:
         if current_time - self.spawn_cloud >= cloud_interval:
             cloud_select = random.randint(0, 2)
             if cloud_select == 0:
-                self.clouds.append(Cloud(self, self.assets['clouds'][0].get_size(), (950, random.randint(0, 100)),'clouds', 0, random.uniform(0.8, 1.8)))
+                self.clouds.append(
+                    Cloud(self, self.assets['clouds'][0].get_size(), (950, random.randint(0, 100)), 'clouds', 0,
+                          random.uniform(0.8, 1.8)))
             if cloud_select == 1:
-                self.clouds.append(Cloud(self, self.assets['clouds'][1].get_size(), (950, random.randint(0, 50)),'clouds', 1, random.uniform(0.3, 1.3)))
+                self.clouds.append(
+                    Cloud(self, self.assets['clouds'][1].get_size(), (950, random.randint(0, 50)), 'clouds', 1,
+                          random.uniform(0.3, 1.3)))
             if cloud_select == 2:
-                self.clouds.append(Cloud(self, self.assets['clouds'][2].get_size(), (950, random.randint(0, 100)), 'clouds', 2, random.uniform(1.3, 2.3)))
+                self.clouds.append(
+                    Cloud(self, self.assets['clouds'][2].get_size(), (950, random.randint(0, 100)), 'clouds', 2,
+                          random.uniform(1.3, 2.3)))
             self.spawn_cloud = current_time
 
     def remove_clouds(self):
@@ -151,5 +162,6 @@ class Menu:
         if self.is_hovered == False:
             self.assets['hover'].play()
             self.is_hovered = True
+
 
 Menu().run()
