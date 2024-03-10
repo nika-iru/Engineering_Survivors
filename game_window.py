@@ -63,6 +63,15 @@ class Game:
 
         self.load_chunks = []
         self.loaded_chunks = []
+        self.chunk_NW = Chunk(self, (0,0))
+        self.chunk_N = Chunk(self, (0,0))
+        self.chunk_NE = Chunk(self, (0,0))
+        self.chunk_W = Chunk(self, (0,0))
+        self.chunk_current = Chunk(self, (0,0))
+        self.chunk_E = Chunk(self, (0,0))
+        self.chunk_SW = Chunk(self, (0,0))
+        self.chunk_S = Chunk(self, (0,0))
+        self.chunk_SE = Chunk(self, (0,0))
 
         self.second_time = 0
         self.pause_time = 0
@@ -85,7 +94,7 @@ class Game:
             self.display.fill((15, 220, 250))
 
             self.background.render(self.display, self.camera, 'background', 0)
-            '''self.chunks_to_load()'''
+            self.chunks_to_load()
 
             mouse_x, mouse_y = pygame.mouse.get_pos()
             mouse_x_on_screen = self.camera.apply_inverse(pygame.Vector2(mouse_x, mouse_y))
@@ -173,7 +182,7 @@ class Game:
         player_x = int(self.player.pos[0])
         player_y = int(self.player.pos[1])
 
-        while player_x % self.screen.get_height() != 0:
+        while player_x % self.screen.get_width() != 0:
             player_x -= 1
         chunk_left_boundary = player_x
 
@@ -182,35 +191,49 @@ class Game:
         chunk_top_boundary = player_y
 
         current_chunk = (chunk_left_boundary, chunk_top_boundary)
+        print(f'current chunk {current_chunk}')
         return current_chunk
 
     def chunks_to_load(self):
         chunk_left = self.check_current_chunk()[0]
         chunk_top = self.check_current_chunk()[1]
-        self.load_chunks.append(Chunk(self, (chunk_left - self.screen.get_width(), chunk_top - self.screen.get_height())))
-        self.load_chunks.append(Chunk(self, (chunk_left, chunk_top - self.screen.get_height())))
-        self.load_chunks.append(Chunk(self, (chunk_left + self.screen.get_width(), chunk_top - self.screen.get_height())))
-        self.load_chunks.append(Chunk(self, (chunk_left - self.screen.get_width(), chunk_top)))
-        self.load_chunks.append(Chunk(self, (chunk_left, chunk_top)))
-        self.load_chunks.append(Chunk(self, (chunk_left + self.screen.get_width(), chunk_top)))
-        self.load_chunks.append(Chunk(self, (chunk_left - self.screen.get_width(), chunk_top + self.screen.get_height())))
-        self.load_chunks.append(Chunk(self, (chunk_left, chunk_top + self.screen.get_height())))
-        self.load_chunks.append(Chunk(self, (chunk_left + self.screen.get_width(), chunk_top + self.screen.get_height())))
+
+        self.chunk_NW.pos = (chunk_left - self.screen.get_width(), chunk_top - self.screen.get_height())
+        self.chunk_N.pos = (chunk_left, chunk_top - self.screen.get_height())
+        self.chunk_NE.pos = (chunk_left + self.screen.get_width(), chunk_top - self.screen.get_height())
+        self.chunk_W.pos = (chunk_left - self.screen.get_width(), chunk_top)
+        self.chunk_current.pos = (chunk_left, chunk_top)
+        self.chunk_E.pos = (chunk_left + self.screen.get_width(), chunk_top)
+        self.chunk_SW.pos = (chunk_left - self.screen.get_width(), chunk_top + self.screen.get_height())
+        self.chunk_S.pos = (chunk_left, chunk_top + self.screen.get_height())
+        self.chunk_SE.pos =(chunk_left + self.screen.get_width(), chunk_top + self.screen.get_height())
+
+        if self.chunk_NW not in self.load_chunks:
+            self.load_chunks.append(self.chunk_NW)
+        if self.chunk_N not in self.load_chunks:
+            self.load_chunks.append(self.chunk_N)
+        if self.chunk_NE not in self.load_chunks:
+            self.load_chunks.append(self.chunk_NE)
+        if self.chunk_W not in self.load_chunks:
+            self.load_chunks.append(self.chunk_W)
+        if self.chunk_current not in self.load_chunks:
+            self.load_chunks.append(self.chunk_current)
+        if self.chunk_E not in self.load_chunks:
+            self.load_chunks.append(self.chunk_E)
+        if self.chunk_SW not in self.load_chunks:
+            self.load_chunks.append(self.chunk_SW)
+        if self.chunk_S not in self.load_chunks:
+            self.load_chunks.append(self.chunk_S)
+        if self.chunk_SE not in self.load_chunks:
+            self.load_chunks.append(self.chunk_SE)
 
         for chunk in self.load_chunks:
             if chunk not in self.loaded_chunks:
-                self.background = Background(self, (self.screen.get_width(), self.screen.get_height()), chunk.pos)
-                self.background.render(self.display, self.camera, 'background', 0)
                 self.loaded_chunks.append(chunk)
-                self.load_chunks.remove(chunk)
 
-        if not self.loaded_chunks:
-            for chunk in self.loaded_chunks:
-                if abs(chunk.pos[0] - self.check_current_chunk()[0]) >= 960:
-                    self.load_chunks.remove(chunk)
-                elif abs(chunk.pos[1] - self.check_current_chunk()[1]) >= 540:
-                    self.load_chunks.remove(chunk)
-
+        for chunk in self.loaded_chunks:
+            self.background = Background(self, (self.screen.get_width(), self.screen.get_height()), chunk.pos)
+            self.background.render(self.display, self.camera, 'background', 0)
     def bullet_enemy_collision(self, bullets_to_remove):
 
         for bullet in self.bullets:
@@ -244,7 +267,7 @@ class Game:
                 try:
                     self.bullets.remove(bullet)
                 except IndexError:
-                    pass
+                    self.bullets_to_remove = []
 
     def check_player_invul(self):
         player_rect = self.player.rect()
@@ -293,17 +316,17 @@ class Game:
                 if guard.asset == 'guard':
                     self.enemy_shoot_bullet(current_time, guard)
 
-        if 0 <= self.second_time <= 420 and self.boss_fight == False:
+        if 0 <= self.second_time <= 420 and self.boss_fight == True:
             self.spawn_enemies_easy(current_time)
 
-        if self.second_time >= 240 and self.boss_fight == False:
+        if self.second_time >= 240 and self.boss_fight == True:
             self.spawn_enemies_medium(current_time)
 
         self.check_player_invul()
 
-        bullets_to_remove = []
-        self.bullet_enemy_collision(bullets_to_remove)
-        self.remove_bullets(bullets_to_remove)
+        self.bullets_to_remove = []
+        self.bullet_enemy_collision(self.bullets_to_remove)
+        self.remove_bullets(self.bullets_to_remove)
 
         self.second_time = self.run_time // 1000
 

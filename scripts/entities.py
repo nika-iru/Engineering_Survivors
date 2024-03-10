@@ -16,7 +16,7 @@ class Player:
         self.base_damage = 3
         self.damage = self.base_damage
 
-        self.base_mvspd = 2
+        self.base_mvspd = 5
         self.mvspd = self.base_mvspd
 
         self.base_atkspd = 2000
