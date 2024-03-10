@@ -16,11 +16,14 @@ class Player:
         self.base_damage = 3
         self.damage = self.base_damage
 
-        self.base_mvspd = 5
+        self.base_mvspd = 3
         self.mvspd = self.base_mvspd
 
         self.base_atkspd = 2000
         self.atkspd = self.base_atkspd
+
+        self.base_bullet_per_shot = 2
+        self.bullet_per_shot = self.base_bullet_per_shot
 
         self.invul = False
         self.invul_timer = 0

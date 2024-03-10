@@ -3,12 +3,13 @@ import sys
 import random
 import math
 
-from scripts.utils import load_image, load_images
+from scripts.utils import load_image, load_images, load_music, load_sfx
 from scripts.entities import Player, Enemy, Bullet, Camera, Background, Chunk, Card
 class Game:
     def __init__(self):
 
         pygame.init()
+        pygame.mixer.init()
 
         self.screen = pygame.display.set_mode((960, 540))
         pygame.display.set_caption("Engineering Survivors")
@@ -27,7 +28,10 @@ class Game:
             'dmg': load_images('level/buffs/dmg'),
             'mvs': load_images('level/buffs/mvs'),
             'hp': load_images('level/buffs/hp'),
-            'ats': load_images('level/buffs/ats')
+            'ats': load_images('level/buffs/ats'),
+            'sht': load_images('level/buffs/sht'),
+
+            'bgm': load_music('bgm/usagi_flap.mp3')
 
         }
 
@@ -50,6 +54,7 @@ class Game:
         self.shoot_timer = 0
         self.shoot_interval = self.bullet.interval
         self.bullets = []
+        self.last_shot = 0
 
         self.enemies = []
         self.spawn_timer_students = pygame.time.get_ticks()
@@ -81,7 +86,8 @@ class Game:
         self.ats = Card(self, self.assets['ats'][0].get_size(), [0,0], 'ats')
         self.mvs = Card(self, self.assets['mvs'][0].get_size(), [0,0], 'mvs')
         self.hp = Card(self, self.assets['hp'][0].get_size(), [0,0], 'hp')
-        self.buff_list = [self.dmg, self.ats, self.mvs, self.hp]
+        self.sht = Card(self, self.assets['hp'][0].get_size(), [0,0], 'sht')
+        self.buff_list = [self.dmg, self.ats, self.mvs, self.hp, self.sht]
         self.render_list = []
         self.cards = []
 
@@ -139,8 +145,6 @@ class Game:
                     if event.key == pygame.K_s:
                         self.movement[3] = False
 
-
-
             if self.game_state == 'running':
                 self.update_game()
             elif self.game_state == 'paused':
@@ -156,6 +160,12 @@ class Game:
 
             '''print(f'Total Run Time: {self.run_time}\nTotal Pause Time: {self.pause_time}\nTotal Tick Time: {pygame.time.get_ticks()}')'''
 
+    def play_bgm(self):
+        if self.second_time % 126:
+            pygame.mixer.music.load(self.assets['bgm'])
+            pygame.mixer.music.set_volume(0.6)
+            pygame.mixer.music.play()
+
     def shoot_bullet(self, current_time):
         mouse_x, mouse_y = pygame.mouse.get_pos()
         direction = self.camera.apply_inverse(pygame.Vector2(mouse_x, mouse_y))
@@ -164,7 +174,9 @@ class Game:
         bullet_size = [5, 5]
         bullet_speed = 5
         bullet_interval = self.player.atkspd
+
         self.bullets.append(Bullet(self, bullet_pos, bullet_size, bullet_speed, bullet_interval, False, direction))
+
         self.shoot_timer = current_time
         self.shoot_interval = self.bullet.interval
 
@@ -191,7 +203,6 @@ class Game:
         chunk_top_boundary = player_y
 
         current_chunk = (chunk_left_boundary, chunk_top_boundary)
-        print(f'current chunk {current_chunk}')
         return current_chunk
 
     def chunks_to_load(self):
@@ -316,10 +327,10 @@ class Game:
                 if guard.asset == 'guard':
                     self.enemy_shoot_bullet(current_time, guard)
 
-        if 0 <= self.second_time <= 420 and self.boss_fight == True:
+        if 0 <= self.second_time <= 420 and self.boss_fight == False:
             self.spawn_enemies_easy(current_time)
 
-        if self.second_time >= 240 and self.boss_fight == True:
+        if self.second_time >= 240 and self.boss_fight == False:
             self.spawn_enemies_medium(current_time)
 
         self.check_player_invul()
@@ -378,7 +389,6 @@ class Game:
             self.buff_02.render(self.display, 1)
 
         for event in pygame.event.get():
-
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if buff_00_rect.collidepoint(event.pos):
                     self.buff_up(self.buff_00)
@@ -393,9 +403,11 @@ class Game:
         elif buff.asset == 'hp':
             self.player.health += 1
         elif buff.asset == 'mvs':
-            self.player.mvspd += 0.15
+            self.player.mvspd += 0.20
         elif buff.asset == 'ats':
-            self.player.atkspd -= (self.player.atkspd*0.)
+            self.player.atkspd -= (self.player.atkspd * 0.2)
+        elif buff.asset == 'sht':
+            self.player.bullet_per_shot += 1
         self.level_up()
 
     def level_up(self):
@@ -410,6 +422,10 @@ class Game:
     def is_running(self):
         self.game_state = 'running'
         self.run_time = pygame.time.get_ticks() - self.pause_time
+        self.movement[0] = False
+        self.movement[1] = False
+        self.movement[2] = False
+        self.movement[3] = False
 
     def is_paused(self):
         self.game_state = 'paused'
@@ -486,32 +502,32 @@ class Game:
                         random.randint((int(self.player.pos[0]) - self.screen.get_width()),
                                        (int(self.player.pos[0]) - self.screen.get_width() // 2)),
 
-                        random.randint((int(self.player.pos[1]) - self.screen.get_height() // 2) * 2,
-                                       (int(self.player.pos[1]) + self.screen.get_height() // 2) * 2)
+                        random.randint((int(self.player.pos[1]) - self.screen.get_height()),
+                                       (int(self.player.pos[1]) + self.screen.get_height()))
                     ]
                 elif side == 'right':
                     enemy_pos = [
                         random.randint((int(self.player.pos[0]) + self.screen.get_width() // 2),
-                                       (int(self.player.pos[0]) + self.screen.get_width() // 2) * 2),
+                                       (int(self.player.pos[0]) + self.screen.get_width())),
 
-                        random.randint((int(self.player.pos[1]) - self.screen.get_height() // 2) * 2,
-                                       (int(self.player.pos[1]) + self.screen.get_height() // 2) * 2)
+                        random.randint((int(self.player.pos[1]) - self.screen.get_height()),
+                                       (int(self.player.pos[1]) + self.screen.get_height()))
                     ]
                 elif side == 'top':
                     enemy_pos = [
-                        random.randint((int(self.player.pos[0]) - self.screen.get_width() // 2) * 2,
-                                       (int(self.player.pos[0]) + self.screen.get_width() // 2) * 2),
+                        random.randint((int(self.player.pos[0]) - self.screen.get_width()),
+                                       (int(self.player.pos[0]) + self.screen.get_width())),
 
                         random.randint((int(self.player.pos[1]) - self.screen.get_height()),
                                        (int(self.player.pos[1]) - self.screen.get_height() // 2))
                     ]
                 elif side == 'bottom':
                     enemy_pos = [
-                        random.randint((int(self.player.pos[0]) - self.screen.get_width() // 2) * 2,
-                                       (int(self.player.pos[0]) + self.screen.get_width() // 2) * 2),
+                        random.randint((int(self.player.pos[0]) - self.screen.get_width()),
+                                       (int(self.player.pos[0]) + self.screen.get_width())),
 
                         random.randint((int(self.player.pos[1]) + self.screen.get_height() // 2),
-                                       (int(self.player.pos[1]) + self.screen.get_height() // 2) * 2)
+                                       (int(self.player.pos[1]) + self.screen.get_height()))
                     ]
 
                 self.enemies.append(Enemy(self, enemy_pos, guard_size, guard_hp, guard_speed, guard_xp_worth, 'guard', 0))

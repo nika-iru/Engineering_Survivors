@@ -8,6 +8,7 @@ import game_window
 
 class Menu:
     def __init__(self):
+
         pygame.init()
         pygame.mixer.init()
 
@@ -24,7 +25,8 @@ class Menu:
             'clouds': load_images('menu/clouds'),
             'menu_bg': load_image('menu/menu_bg.png'),
             'menu_bgm': load_music('menu/constant_moderato.mp3'),
-            'hover': load_sfx('sfx/hover.mp3')
+            'hover': load_sfx('sfx/hover.mp3'),
+            'bgm':load_music('bgm/usagi_flap.mp3')
 
         }
 
@@ -111,7 +113,11 @@ class Menu:
             if self.current_state == 'Menu':
                 self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))
             elif self.current_state == 'Game':
-                self.game_instance.run()  # Run the game loop
+                pygame.mixer.music.load(self.assets['bgm'])
+                pygame.mixer.music.set_volume(0.3)
+                pygame.mixer.music.play()
+                self.game_instance.run()
+                # Run the game loop
 
             pygame.display.update()
             self.clock.tick(60)
