@@ -142,9 +142,9 @@ class Enemy:
         enemy_pos_on_screen = camera.apply(self.pos)
         enemy_flipped = pygame.transform.flip(self.game.assets[self.asset][self.index], True, False).convert_alpha()
         enemy_flipped.set_colorkey((255, 255, 255))
-        if player.pos[0] > self.pos[0]:
+        if player.pos[0] + (player.size[0] // 2) > self.pos[0] + (self.size[0] // 2):
             surf.blit(enemy_flipped, enemy_pos_on_screen)
-        if player.pos[0] < self.pos[0]:
+        elif player.pos[0] + (player.size[0] // 2) < self.pos[0] + (self.size[0] // 2):
             surf.blit(self.game.assets[self.asset][self.index], enemy_pos_on_screen)
 
 
@@ -166,9 +166,9 @@ class Bullet:
     def rect(self):  # this refers to the upper right pixel of the entity
         return pygame.Rect(self.pos[0], self.pos[1], self.size[0], self.size[1])
 
-    def render(self, surf, camera):
+    def render(self, surf, camera, index):
         bullet_initial_pos = camera.apply(self.pos)
-        surf.blit(self.game.assets['bullet'][0], bullet_initial_pos)
+        surf.blit(self.game.assets['bullet'][index], bullet_initial_pos)
 
 
 class Background:

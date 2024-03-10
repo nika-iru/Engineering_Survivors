@@ -23,6 +23,8 @@ class Game:
             'player': load_images('player'),
             'student': load_images('enemy/student'),
             'guard': load_images('enemy/guard'),
+            'staff': load_images('enemy/staff'),
+            'boss': load_images('enemy/boss'),
             'background': load_images('background'),
             'bullet': load_images('bullet'),
             'dmg': load_images('level/buffs/dmg'),
@@ -33,7 +35,8 @@ class Game:
             'dsh': load_images('level/buffs/dsh'),
             'health': load_image('sprites/hp.png'),
 
-            'bgm': load_music('bgm/usagi_flap.mp3')
+            'bgm': load_music('bgm/usagi_flap.mp3'),
+            'boss_bgm': load_music('boss/unwelcome_school.mp3')
 
         }
 
@@ -64,8 +67,15 @@ class Game:
         self.enemies = []
         self.spawn_timer_students = pygame.time.get_ticks()
         self.spawn_timer_guards = pygame.time.get_ticks()
+        self.spawn_timer_staff = pygame.time.get_ticks()
         self.enemy_shoot_timer = pygame.time.get_ticks()
+        self.boss_shoot_timer = pygame.time.get_ticks()
         self.enemy_bullets = []
+        self.boss_bullets = []
+        self.boss_dash_time = 0
+        self.boss_dash_interval = 10000
+        self.boss_dash_duration = 500
+        self.boss_baseSpd = 2
 
         bg_size = self.assets['background'][0].get_size()
         bg_pos = (self.display.get_width() // 2 - self.assets['background'][0].get_width() // 2, self.display.get_height() // 2 - self.assets['background'][0].get_height() // 2)
@@ -118,10 +128,13 @@ class Game:
             self.player.render(self.display, self.camera, mouse_x_on_screen[0])
 
             for bullet in self.bullets:
-                bullet.render(self.display, self.camera)
+                bullet.render(self.display, self.camera, 0)
 
             for enemy_bullet in self.enemy_bullets:
-                enemy_bullet.render(self.display, self.camera)
+                enemy_bullet.render(self.display, self.camera, 0)
+
+            for boss_bullet in self.boss_bullets:
+                boss_bullet.render(self.display, self.camera, 1)
 
             for enemy in self.enemies:
                 enemy.render(self.display, self.camera, self.player)
@@ -179,12 +192,6 @@ class Game:
 
             '''print(f'Total Run Time: {self.run_time}\nTotal Pause Time: {self.pause_time}\nTotal Tick Time: {pygame.time.get_ticks()}')'''
 
-    def play_bgm(self):
-        if self.second_time % 126:
-            pygame.mixer.music.load(self.assets['bgm'])
-            pygame.mixer.music.set_volume(0.6)
-            pygame.mixer.music.play()
-
     def shoot_bullet(self, current_time):
         mouse_x, mouse_y = pygame.mouse.get_pos()
         direction = self.camera.apply_inverse(pygame.Vector2(mouse_x, mouse_y))
@@ -208,6 +215,16 @@ class Game:
         bullet_interval = 3000
         self.enemy_bullets.append(Bullet(self, bullet_pos, bullet_size, bullet_speed, bullet_interval, False, direction))
         self.enemy_shoot_timer = current_time
+
+    def boss_shoot_bullet(self, current_time, enemy):
+        direction = pygame.Vector2(self.player.pos[0], self.player.pos[1])
+
+        bullet_pos = [enemy.pos[0] + enemy.size[0] // 2, enemy.pos[1] + enemy.size[1] // 2]
+        bullet_size = self.assets['bullet'][1].get_size()
+        bullet_speed = 6
+        bullet_interval = 2500
+        self.boss_bullets.append(Bullet(self, bullet_pos, bullet_size, bullet_speed, bullet_interval, False, direction))
+        self.boss_shoot_timer = current_time
 
     def check_current_chunk(self):
         player_x = int(self.player.pos[0])
@@ -305,7 +322,10 @@ class Game:
         if not self.player.invul:
             for enemy in self.enemies:
                 enemy_rect = enemy.rect()
-                if player_rect.colliderect(enemy_rect):
+                if enemy.asset == 'boss' and player_rect.colliderect(enemy_rect):
+                    self.player.take_dmg(2)
+                    self.player.apply_invulnerability()
+                elif player_rect.colliderect(enemy_rect):
                     self.player.take_dmg(1)
                     self.player.apply_invulnerability()
             for bullet in self.enemy_bullets:
@@ -314,6 +334,20 @@ class Game:
                 if bullet_rect.colliderect(player_rect):
                     self.player.take_dmg(1)
                     self.player.apply_invulnerability()
+                    try:
+                        self.enemy_bullets.remove(bullet)
+                    except ValueError:
+                        pass
+            for bullet in self.boss_bullets:
+                bullet_rect = bullet.rect()
+                player_rect = self.player.rect()
+                if bullet_rect.colliderect(player_rect):
+                    self.player.take_dmg(1)
+                    self.player.apply_invulnerability()
+                    try:
+                        self.boss_bullets.remove(bullet)
+                    except ValueError:
+                        pass
 
         if self.player.invul:
             current_time = self.run_time
@@ -330,6 +364,9 @@ class Game:
 
         for bullet in self.bullets:
             bullet.update()
+
+        for boss_bullet in self.boss_bullets:
+            boss_bullet.update()
 
         for enemy_bullet in self.enemy_bullets:
             enemy_bullet.update()
@@ -362,20 +399,48 @@ class Game:
                 self.shoot_bullet(current_time)
                 self.third_shot = current_time - 400
 
+        for boss in self.enemies:
+            if boss.asset == 'boss':
+                if current_time - self.boss_dash_time >= self.boss_dash_interval:
+                    boss.eSpd *= 5
+                    self.boss_dash_time = current_time
+
+                if current_time - (self.boss_dash_time) >= self.boss_dash_duration:
+                    boss.eSpd = self.boss_baseSpd
+
         if current_time - self.enemy_shoot_timer >= 3000:
             for guard in self.enemies:
                 if guard.asset == 'guard':
                     self.enemy_shoot_bullet(current_time, guard)
 
-        '''print (f'There are currently {len(self.enemies)} enemies aon the map')'''
+        if current_time - self.boss_shoot_timer >= 2500:
+            for boss in self.enemies:
+                if boss.asset == 'boss':
+                    self.boss_shoot_bullet(current_time, boss)
 
-        if 0 <= self.second_time <= 420 and self.boss_fight == False:
+        '''print (f'There are currently {len(self.enemies)} enemies on the map')'''
+
+        if 0 <= self.second_time <= 300 and self.boss_fight == False:
             if len(self.enemies) <= 15:
-                self.spawn_enemies_easy(current_time)
+                self.spawn_enemies_student(current_time)
 
         if self.second_time >= 240 and self.boss_fight == False:
-            if len(self.enemies) <= 20:
-                self.spawn_enemies_medium(current_time)
+            if len(self.enemies) <= 30:
+                self.spawn_enemies_guard(current_time)
+                self.spawn_enemies_staff(current_time)
+
+        if self.second_time >= 8 and self.boss_fight == False:
+            self.boss_fight = True
+            for enemy in self.enemies:
+                try:
+                    self.enemies.remove(enemy)
+                except ValueError:
+                    pass
+            self.spawn_boss()
+
+        if self.boss_fight == True:
+            if len(self.enemies) <= 21:
+                self.spawn_enemies_staff(current_time)
 
         self.check_player_invul()
 
@@ -488,7 +553,7 @@ class Game:
         self.game_state = 'paused'
         self.run_time = pygame.time.get_ticks() - self.pause_time
 
-    def spawn_enemies_easy(self, current_time):
+    def spawn_enemies_student(self, current_time):
 
         spawn_interval = 5000
 
@@ -540,14 +605,14 @@ class Game:
 
             self.spawn_timer_students = current_time
 
-    def spawn_enemies_medium(self, current_time):
+    def spawn_enemies_guard(self, current_time):
 
-        spawn_interval = 5000
+        spawn_interval = 6000
 
         guard_size = self.assets['student'][0].get_size()
         guard_hp = 12
         guard_speed = 1.5
-        guard_xp_worth = 4
+        guard_xp_worth = 5
 
         if current_time - self.spawn_timer_guards >= spawn_interval:
             for enemiesToSpawn in range(0, 1):
@@ -590,3 +655,85 @@ class Game:
                 self.enemies.append(Enemy(self, enemy_pos, guard_size, guard_hp, guard_speed, guard_xp_worth, 'guard', 0))
 
             self.spawn_timer_guards = current_time
+
+    def spawn_enemies_staff(self, current_time):
+
+        spawn_interval = 4000
+
+        staff_size = self.assets['staff'][0].get_size()
+        staff_hp = 15
+        staff_speed = 3.6
+        staff_xp_worth = 4
+
+        if current_time - self.spawn_timer_staff >= spawn_interval:
+            for enemiesToSpawn in range(0, 2):
+                # Randomly choose one of the four sides for enemy spawn
+                side = random.choice(['left', 'right', 'top', 'bottom'])
+
+                if side == 'left':
+                    enemy_pos = [
+                        random.randint((int(self.player.pos[0]) - self.screen.get_width()),
+                                       (int(self.player.pos[0]) - self.screen.get_width() // 2)),
+
+                        random.randint((int(self.player.pos[1]) - self.screen.get_height()),
+                                       (int(self.player.pos[1]) + self.screen.get_height()))
+                    ]
+                elif side == 'right':
+                    enemy_pos = [
+                        random.randint((int(self.player.pos[0]) + self.screen.get_width() // 2),
+                                       (int(self.player.pos[0]) + self.screen.get_width())),
+
+                        random.randint((int(self.player.pos[1]) - self.screen.get_height()),
+                                       (int(self.player.pos[1]) + self.screen.get_height()))
+                    ]
+                elif side == 'top':
+                    enemy_pos = [
+                        random.randint((int(self.player.pos[0]) - self.screen.get_width()),
+                                       (int(self.player.pos[0]) + self.screen.get_width())),
+
+                        random.randint((int(self.player.pos[1]) - self.screen.get_height()),
+                                       (int(self.player.pos[1]) - self.screen.get_height() // 2))
+                    ]
+                elif side == 'bottom':
+                    enemy_pos = [
+                        random.randint((int(self.player.pos[0]) - self.screen.get_width()),
+                                       (int(self.player.pos[0]) + self.screen.get_width())),
+
+                        random.randint((int(self.player.pos[1]) + self.screen.get_height() // 2),
+                                       (int(self.player.pos[1]) + self.screen.get_height()))
+                    ]
+
+                self.enemies.append(
+                    Enemy(self, enemy_pos, staff_size, staff_hp, staff_speed, staff_xp_worth, 'staff', 0))
+
+            self.spawn_timer_staff = current_time
+
+    def spawn_boss(self):
+        side = random.choice(['left', 'right'])
+
+        boss_size = self.assets['boss'][0].get_size()
+        boss_hp = 2400
+        boss_speed = 2
+        boss_xp_worth = 0
+
+        pygame.mixer.music.stop()
+        pygame.mixer.music.load(self.assets['boss_bgm'])
+        pygame.mixer.music.play(loops=-1)
+
+        if side == 'left':
+            enemy_pos = [
+                random.randint((int(self.player.pos[0]) - self.screen.get_width()),
+                               (int(self.player.pos[0]) - self.screen.get_width() // 2)),
+
+                self.player.pos[1]
+            ]
+        elif side == 'right':
+            enemy_pos = [
+                random.randint((int(self.player.pos[0]) + self.screen.get_width() // 2),
+                               (int(self.player.pos[0]) + self.screen.get_width())),
+
+                self.player.pos[1]
+            ]
+
+        self.enemies.append(
+            Enemy(self, enemy_pos, boss_size, boss_hp, boss_speed, boss_xp_worth, 'boss', 0))
