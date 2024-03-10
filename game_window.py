@@ -4,7 +4,7 @@ import random
 import math
 
 from scripts.utils import load_image, load_images, load_music, load_sfx
-from scripts.entities import Player, Enemy, Bullet, Camera, Background, Chunk, Card
+from scripts.entities import Player, Enemy, Bullet, Camera, Background, Chunk, Card, Sprite
 class Game:
     def __init__(self):
 
@@ -30,6 +30,8 @@ class Game:
             'hp': load_images('level/buffs/hp'),
             'ats': load_images('level/buffs/ats'),
             'sht': load_images('level/buffs/sht'),
+            'dsh': load_images('level/buffs/dsh'),
+            'health': load_image('sprites/hp.png'),
 
             'bgm': load_music('bgm/usagi_flap.mp3')
 
@@ -42,6 +44,7 @@ class Game:
         self.camera = Camera(self, self.player.center())
         # player movement
         self.movement = [False, False, False, False]
+        self.dash_time = 0
 
         mouse_x, mouse_y = pygame.mouse.get_pos()
         direction = self.camera.apply_inverse(pygame.Vector2(mouse_x, mouse_y))
@@ -54,7 +57,9 @@ class Game:
         self.shoot_timer = 0
         self.shoot_interval = self.bullet.interval
         self.bullets = []
-        self.last_shot = 0
+        self.second_shot = 0
+        self.third_shot = 0
+        self.current_time_of_shot = pygame.time.get_ticks()
 
         self.enemies = []
         self.spawn_timer_students = pygame.time.get_ticks()
@@ -87,9 +92,12 @@ class Game:
         self.mvs = Card(self, self.assets['mvs'][0].get_size(), [0,0], 'mvs')
         self.hp = Card(self, self.assets['hp'][0].get_size(), [0,0], 'hp')
         self.sht = Card(self, self.assets['hp'][0].get_size(), [0,0], 'sht')
-        self.buff_list = [self.dmg, self.ats, self.mvs, self.hp, self.sht]
+        self.dsh = Card(self, self.assets['dsh'][0].get_size(), [0,0], 'dsh')
+        self.buff_list = [self.dmg, self.ats, self.mvs, self.hp, self.sht, self.dsh]
         self.render_list = []
         self.cards = []
+
+        self.hp_bar = Sprite(self, self.assets['health'].get_size(), [32, 32], 'health')
 
         self.game_state = 'running'
         self.boss_fight = False
@@ -101,6 +109,8 @@ class Game:
 
             self.background.render(self.display, self.camera, 'background', 0)
             self.chunks_to_load()
+
+            self.hp_bar.render(self.display)
 
             mouse_x, mouse_y = pygame.mouse.get_pos()
             mouse_x_on_screen = self.camera.apply_inverse(pygame.Vector2(mouse_x, mouse_y))
@@ -115,6 +125,8 @@ class Game:
 
             for enemy in self.enemies:
                 enemy.render(self.display, self.camera, self.player)
+
+            current_time = pygame.time.get_ticks()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -134,6 +146,13 @@ class Game:
                             self.is_paused()
                         elif self.game_state == 'paused':
                             self.is_running()
+                    if event.key == pygame.K_SPACE:
+                        if current_time - self.dash_time >= self.player.dash_cd:
+                            self.dash_time = current_time
+                            print(self.dash_time)
+                            self.player.dash(self.camera)
+                        else:
+                            print(f'dash on cooldown {current_time - self.dash_time}')
 
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_a:
@@ -177,8 +196,8 @@ class Game:
 
         self.bullets.append(Bullet(self, bullet_pos, bullet_size, bullet_speed, bullet_interval, False, direction))
 
-        self.shoot_timer = current_time
         self.shoot_interval = self.bullet.interval
+
 
     def enemy_shoot_bullet(self, current_time, enemy):
         direction = pygame.Vector2(self.player.pos[0], self.player.pos[1])
@@ -277,8 +296,8 @@ class Game:
             for bullet in bullets_to_remove:
                 try:
                     self.bullets.remove(bullet)
-                except IndexError:
-                    self.bullets_to_remove = []
+                except ValueError:
+                    pass
 
     def check_player_invul(self):
         player_rect = self.player.rect()
@@ -319,19 +338,44 @@ class Game:
             enemy.update(self.player)
 
         current_time = self.run_time
-        if current_time - self.shoot_timer >= self.shoot_interval:
-            self.shoot_bullet(current_time)
+        if self.player.bullets_per_shot == 1:
+            if current_time - self.shoot_timer >= self.shoot_interval:
+                self.shoot_bullet(current_time)
+                self.shoot_timer = current_time
+
+        if self.player.bullets_per_shot == 2:
+            if current_time - self.shoot_timer >= self.shoot_interval:
+                self.shoot_bullet(current_time)
+                self.shoot_timer = current_time
+            if current_time - self.second_shot >= self.player.atkspd + 200:
+                self.shoot_bullet(current_time)
+                self.second_shot = current_time - 200
+
+        if self.player.bullets_per_shot == 3:
+            if current_time - self.shoot_timer >= self.shoot_interval:
+                self.shoot_bullet(current_time)
+                self.shoot_timer = current_time
+            if current_time - self.second_shot >= self.player.atkspd + 200:
+                self.shoot_bullet(current_time)
+                self.second_shot = current_time - 200
+            if current_time - self.third_shot >= self.player.atkspd + 400:
+                self.shoot_bullet(current_time)
+                self.third_shot = current_time - 400
 
         if current_time - self.enemy_shoot_timer >= 3000:
             for guard in self.enemies:
                 if guard.asset == 'guard':
                     self.enemy_shoot_bullet(current_time, guard)
 
+        '''print (f'There are currently {len(self.enemies)} enemies aon the map')'''
+
         if 0 <= self.second_time <= 420 and self.boss_fight == False:
-            self.spawn_enemies_easy(current_time)
+            if len(self.enemies) <= 15:
+                self.spawn_enemies_easy(current_time)
 
         if self.second_time >= 240 and self.boss_fight == False:
-            self.spawn_enemies_medium(current_time)
+            if len(self.enemies) <= 20:
+                self.spawn_enemies_medium(current_time)
 
         self.check_player_invul()
 
@@ -345,6 +389,10 @@ class Game:
         text = font.render(str(self.second_time), True, (250, 250, 250))
         self.display.blit(text, (self.screen.get_width() // 2 - text.get_width() // 2, 10))
 
+        font = pygame.font.Font(None, 42)
+        hp = font.render(str(self.player.health), True, (250,250,250))
+        self.display.blit(hp, (24 + self.assets['health'].get_width() // 2, 18 + self.assets['health'].get_height() // 2))
+
         self.clock.tick(60)
 
     def check_player_xp(self):
@@ -353,6 +401,13 @@ class Game:
 
     def select_buff(self):
         self.is_paused()
+
+        if self.player.bullets_per_shot == 3:
+            try:
+                self.buff_list.remove(self.sht)
+            except ValueError:
+                pass
+        print(self.buff_list)
 
         card_pos_1 = [((self.display.get_width() // 3) / 2 - self.assets['dmg'][0].get_width() // 2), (self.display.get_height() // 2 - self.assets['dmg'][0].get_height() // 2)]
         card_pos_2 = [(self.display.get_width() // 2 - self.assets['dmg'][0].get_width() // 2), (self.display.get_height() // 2 - self.assets['dmg'][0].get_height() // 2)]
@@ -403,11 +458,13 @@ class Game:
         elif buff.asset == 'hp':
             self.player.health += 1
         elif buff.asset == 'mvs':
-            self.player.mvspd += 0.20
+            self.player.mvspd += 0.25
         elif buff.asset == 'ats':
             self.player.atkspd -= (self.player.atkspd * 0.2)
         elif buff.asset == 'sht':
-            self.player.bullet_per_shot += 1
+            self.player.bullets_per_shot += 1
+        elif buff.asset == 'dsh':
+            self.player.dash_cd -= (self.player.dash_cd * 0.2)
         self.level_up()
 
     def level_up(self):
@@ -438,7 +495,7 @@ class Game:
         student_size = self.assets['student'][0].get_size()
 
         student_hp = 5
-        student_speed = 1.5
+        student_speed = 2.5
         student_xp_worth = 2
 
         if current_time - self.spawn_timer_students >= spawn_interval:
@@ -489,7 +546,7 @@ class Game:
 
         guard_size = self.assets['student'][0].get_size()
         guard_hp = 12
-        guard_speed = 1
+        guard_speed = 1.5
         guard_xp_worth = 4
 
         if current_time - self.spawn_timer_guards >= spawn_interval:

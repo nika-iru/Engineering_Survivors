@@ -22,8 +22,11 @@ class Player:
         self.base_atkspd = 2000
         self.atkspd = self.base_atkspd
 
-        self.base_bullet_per_shot = 2
-        self.bullet_per_shot = self.base_bullet_per_shot
+        self.base_bullets_per_shot = 1
+        self.bullets_per_shot = self.base_bullets_per_shot
+
+        self.base_dash_cd = 8000
+        self.dash_cd = self.base_dash_cd
 
         self.invul = False
         self.invul_timer = 0
@@ -44,13 +47,19 @@ class Player:
             dx /= length
             dy /= length
 
-        # Update player position
         self.pos[0] += dx * self.mvspd
         self.pos[1] += dy * self.mvspd
 
         if self.health <= 0:
             pygame.quit()
             sys.exit()
+
+    def dash(self, camera):
+        mouse_x, mouse_y = camera.apply_inverse(pygame.mouse.get_pos())
+
+        angle_to_mouse = math.atan2(mouse_y - self.pos[1],  mouse_x - self.pos[0])
+        self.pos[0] += 100 * math.cos(angle_to_mouse)
+        self.pos[1] += 100 * math.sin(angle_to_mouse)
 
     def center(self):
         return pygame.Vector2(self.pos[0] + self.size[0] // 2, self.pos[1] + self.size[1] // 2)
@@ -59,8 +68,8 @@ class Player:
         player_pos_on_screen = camera.apply(self.pos)
 
         # Hitbox for debugging
-        pygame.draw.rect(surf, (255, 0, 0), pygame.Rect(player_pos_on_screen[0], (player_pos_on_screen[1]), self.size[0], self.size[1]), 2)
-        pygame.draw.rect(surf, (255, 255, 255),pygame.Rect(self.pos[0], (self.pos[1]), self.size[0], self.size[1]), 2)
+        '''pygame.draw.rect(surf, (255, 0, 0), pygame.Rect(player_pos_on_screen[0], (player_pos_on_screen[1]), self.size[0], self.size[1]), 2)
+        pygame.draw.rect(surf, (255, 255, 255),pygame.Rect(self.pos[0], (self.pos[1]), self.size[0], self.size[1]), 2)'''
 
         player_flipped = pygame.transform.flip(self.game.assets['player'][0], True, False).convert_alpha()
         player_flipped.set_colorkey((255, 255, 255))
@@ -194,12 +203,25 @@ class Card:
         return pygame.Vector2(self.pos[0] + self.size[0] // 2, self.pos[1] + self.size[1] // 2)
 
     def render(self, surf, index):
-        # Use the camera to adjust the background's position
         card_pos = self.pos
         surf.blit(self.game.assets[self.asset][index], card_pos)
 
     def rect(self):  # this refers to the upper right pixel of the entity
         return pygame.Rect(self.pos[0], self.pos[1], self.size[0], self.size[1])
+
+class Sprite:
+    def __init__(self, game, size, pos, asset):
+        self.game = game
+        self.size = size
+        self.pos = list(pos)
+        self.asset = asset
+
+    def center(self):
+        return pygame.Vector2(self.pos[0] + self.size[0] // 2, self.pos[1] + self.size[1] // 2)
+
+    def render(self, surf):
+        pos = self.pos
+        surf.blit(self.game.assets[self.asset], pos)
 
 
 
