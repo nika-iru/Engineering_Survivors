@@ -85,7 +85,7 @@ class Game:
             self.display.fill((15, 220, 250))
 
             self.background.render(self.display, self.camera, 'background', 0)
-            self.chunks_to_load()
+            '''self.chunks_to_load()'''
 
             mouse_x, mouse_y = pygame.mouse.get_pos()
             mouse_x_on_screen = self.camera.apply_inverse(pygame.Vector2(mouse_x, mouse_y))
@@ -160,7 +160,7 @@ class Game:
         self.shoot_interval = self.bullet.interval
 
     def enemy_shoot_bullet(self, current_time, enemy):
-        direction = (pygame.Vector2(math.atan2(self.player.pos[0] - enemy.pos[0], self.player.pos[1] - enemy.pos[1])))
+        direction = pygame.Vector2(self.player.pos[0], self.player.pos[1])
 
         bullet_pos = [enemy.pos[0] + enemy.size[0] // 2, enemy.pos[1] + enemy.size[1] // 2]
         bullet_size = [5, 5]
@@ -285,11 +285,11 @@ class Game:
                 if guard.asset == 'guard':
                     self.enemy_shoot_bullet(current_time, guard)
 
-        '''if self.second_time >= 0 and self.boss_fight == False:
-            self.spawn_enemies_easy(current_time)'''
+        if self.second_time >= 0 and self.boss_fight == False:
+            self.spawn_enemies_easy(current_time)
 
-        '''if self.second_time >= 300 and self.boss_fight == False:'''
-        self.spawn_enemies_medium(current_time)
+        if self.second_time >= 300 and self.boss_fight == False:
+            self.spawn_enemies_medium(current_time)
 
         self.check_player_invul()
 
@@ -389,6 +389,7 @@ class Game:
         spawn_interval = 3000
 
         student_size = self.assets['student'][0].get_size()
+
         student_hp = 5
         student_speed = 1.5
         student_xp_worth = 2
@@ -403,32 +404,32 @@ class Game:
                         random.randint((int(self.player.pos[0]) - self.screen.get_width()),
                                        (int(self.player.pos[0]) - self.screen.get_width() // 2)),
 
-                        random.randint((int(self.player.pos[1]) - self.screen.get_height() // 2) * 2,
-                                       (int(self.player.pos[1]) + self.screen.get_height() // 2) * 2)
+                        random.randint((int(self.player.pos[1]) - self.screen.get_height()),
+                                       (int(self.player.pos[1]) + self.screen.get_height()))
                     ]
                 elif side == 'right':
                     enemy_pos = [
                         random.randint((int(self.player.pos[0]) + self.screen.get_width() // 2),
-                                       (int(self.player.pos[0]) + self.screen.get_width() // 2) *2),
+                                       (int(self.player.pos[0]) + self.screen.get_width())),
 
-                        random.randint((int(self.player.pos[1]) - self.screen.get_height() // 2) * 2,
-                                       (int(self.player.pos[1]) + self.screen.get_height() // 2) * 2)
+                        random.randint((int(self.player.pos[1]) - self.screen.get_height()),
+                                       (int(self.player.pos[1]) + self.screen.get_height()))
                     ]
                 elif side == 'top':
                     enemy_pos = [
-                        random.randint((int(self.player.pos[0]) - self.screen.get_width() // 2) * 2,
-                                       (int(self.player.pos[0]) + self.screen.get_width() // 2) * 2),
+                        random.randint((int(self.player.pos[0]) - self.screen.get_width()),
+                                       (int(self.player.pos[0]) + self.screen.get_width())),
 
                         random.randint((int(self.player.pos[1]) - self.screen.get_height()),
                                        (int(self.player.pos[1]) - self.screen.get_height() // 2))
                     ]
                 elif side == 'bottom':
                     enemy_pos = [
-                        random.randint((int(self.player.pos[0]) - self.screen.get_width() // 2) * 2,
-                                       (int(self.player.pos[0]) + self.screen.get_width() // 2) * 2),
+                        random.randint((int(self.player.pos[0]) - self.screen.get_width()),
+                                       (int(self.player.pos[0]) + self.screen.get_width())),
 
                         random.randint((int(self.player.pos[1]) + self.screen.get_height() // 2),
-                                       (int(self.player.pos[1]) + self.screen.get_height() // 2) * 2)
+                                       (int(self.player.pos[1]) + self.screen.get_height()))
                     ]
 
                 self.enemies.append(Enemy(self, enemy_pos, student_size, student_hp, student_speed, student_xp_worth, 'student', 0))

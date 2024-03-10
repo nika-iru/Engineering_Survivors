@@ -10,7 +10,7 @@ class Player:
         self.size = size
 
         # player stats
-        self.base_hp = 4
+        self.base_hp = 1000
         self.health = self.base_hp
 
         self.base_damage = 3
