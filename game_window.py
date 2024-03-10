@@ -164,7 +164,7 @@ class Game:
 
         bullet_pos = [enemy.pos[0] + enemy.size[0] // 2, enemy.pos[1] + enemy.size[1] // 2]
         bullet_size = [5, 5]
-        bullet_speed = 5
+        bullet_speed = 7.5
         bullet_interval = 3000
         self.enemy_bullets.append(Bullet(self, bullet_pos, bullet_size, bullet_speed, bullet_interval, False, direction))
         self.enemy_shoot_timer = current_time
@@ -241,8 +241,10 @@ class Game:
 
         if bullets_to_remove:
             for bullet in bullets_to_remove:
-                self.bullets.remove(bullet)
-
+                try:
+                    self.bullets.remove(bullet)
+                except IndexError:
+                    pass
 
     def check_player_invul(self):
         player_rect = self.player.rect()
@@ -251,6 +253,12 @@ class Game:
             for enemy in self.enemies:
                 enemy_rect = enemy.rect()
                 if player_rect.colliderect(enemy_rect):
+                    self.player.take_dmg(1)
+                    self.player.apply_invulnerability()
+            for bullet in self.enemy_bullets:
+                bullet_rect = bullet.rect()
+                player_rect = self.player.rect()
+                if bullet_rect.colliderect(player_rect):
                     self.player.take_dmg(1)
                     self.player.apply_invulnerability()
 
@@ -285,10 +293,10 @@ class Game:
                 if guard.asset == 'guard':
                     self.enemy_shoot_bullet(current_time, guard)
 
-        if self.second_time >= 0 and self.boss_fight == False:
+        if 0 <= self.second_time <= 420 and self.boss_fight == False:
             self.spawn_enemies_easy(current_time)
 
-        if self.second_time >= 300 and self.boss_fight == False:
+        if self.second_time >= 240 and self.boss_fight == False:
             self.spawn_enemies_medium(current_time)
 
         self.check_player_invul()
@@ -386,7 +394,7 @@ class Game:
 
     def spawn_enemies_easy(self, current_time):
 
-        spawn_interval = 3000
+        spawn_interval = 5000
 
         student_size = self.assets['student'][0].get_size()
 

@@ -10,7 +10,7 @@ class Player:
         self.size = size
 
         # player stats
-        self.base_hp = 1000
+        self.base_hp = 4
         self.health = self.base_hp
 
         self.base_damage = 3
@@ -30,7 +30,7 @@ class Player:
         self.playerlvl = 1
 
     def rect(self):  # this refers to the upper right pixel of the entity
-        return pygame.Rect(self.pos[0], (self.pos[1] + self.size[1] // 2), self.size[0], self.size[1] // 2)
+        return pygame.Rect(self.pos[0], (self.pos[1]), self.size[0], self.size[1])
 
     def update(self, movement = (0, 0)):
         dx, dy = movement
@@ -56,8 +56,8 @@ class Player:
         player_pos_on_screen = camera.apply(self.pos)
 
         # Hitbox for debugging
-        pygame.draw.rect(surf, (255, 0, 0), pygame.Rect(player_pos_on_screen[0], (player_pos_on_screen[1] + self.size[1] // 2), self.size[0], self.size[1] // 2), 2)
-        pygame.draw.rect(surf, (255, 255, 255),pygame.Rect(self.pos[0], (self.pos[1] + self.size[1] // 2), self.size[0], self.size[1] // 2), 2)
+        pygame.draw.rect(surf, (255, 0, 0), pygame.Rect(player_pos_on_screen[0], (player_pos_on_screen[1]), self.size[0], self.size[1]), 2)
+        pygame.draw.rect(surf, (255, 255, 255),pygame.Rect(self.pos[0], (self.pos[1]), self.size[0], self.size[1]), 2)
 
         player_flipped = pygame.transform.flip(self.game.assets['player'][0], True, False).convert_alpha()
         player_flipped.set_colorkey((255, 255, 255))
