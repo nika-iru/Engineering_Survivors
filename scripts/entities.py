@@ -137,7 +137,6 @@ class Enemy:
                     else:
                         self.pos[1] += self.eSpd
 
-
     def render(self, surf, camera, player):
         # Use the camera to adjust the player's position
         enemy_pos_on_screen = camera.apply(self.pos)

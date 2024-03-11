@@ -103,6 +103,7 @@ class Menu:
                     pygame.quit()
                     sys.exit()
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    print('mb1 clicked')
                     if play_rect.collidepoint(event.pos):
                         self.current_state = 'Game'  # Switch to the Game state
                         pygame.mixer.music.stop()

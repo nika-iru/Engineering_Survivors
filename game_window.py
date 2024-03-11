@@ -6,6 +6,7 @@ import math
 from scripts.utils import load_image, load_images, load_music, load_sfx
 from scripts.entities import Player, Enemy, Bullet, Camera, Background, Chunk, Card, Sprite
 from scripts.menu_utils import Button
+
 class Game:
     def __init__(self):
 
@@ -184,6 +185,26 @@ class Game:
                     if event.key == pygame.K_s:
                         self.movement[3] = False
 
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.game_state == 'paused':
+                    exit_rect = self.exit.rect()
+
+                    print('mb1 clicked')
+                    if exit_rect.collidepoint(event.pos):
+                        import menu
+                        menu.Menu.game_instance = 'Menu'
+
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.game_state == 'leveling':
+                    buff_00_rect = self.buff_00.rect()
+                    buff_01_rect = self.buff_01.rect()
+                    buff_02_rect = self.buff_02.rect()
+
+                    if buff_00_rect.collidepoint(event.pos):
+                        self.buff_up(self.buff_00)
+                    elif buff_01_rect.collidepoint(event.pos):
+                        self.buff_up(self.buff_01)
+                    elif buff_02_rect.collidepoint(event.pos):
+                        self.buff_up(self.buff_02)
+
             if self.game_state == 'running':
                 self.update_game()
             elif self.game_state == 'paused':
@@ -193,6 +214,9 @@ class Game:
                 self.display.blit(text, (self.screen.get_width() // 2 - text.get_width() // 2, self.screen.get_height() // 2 - text.get_height() // 2))
 
                 self.paused()
+            elif self.game_state == 'leveling':
+                self.pause_time = pygame.time.get_ticks() - self.run_time
+
 
             self.check_player_xp()
 
@@ -474,7 +498,7 @@ class Game:
 
         if self.player.currentXP >= self.player.neededXP:
             if self.game_state == 'running':
-                self.is_paused()
+                self.is_leveling()
             self.select_buff()
 
     def select_buff(self):
@@ -520,7 +544,11 @@ class Game:
             self.buff_02.render(self.display, 1)
 
         for event in pygame.event.get():
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.game_state == 'leveling':
+                buff_00_rect = self.buff_00.rect
+                buff_01_rect = self.buff_01.rect
+                buff_02_rect = self.buff_02.rect
+
                 if buff_00_rect.collidepoint(event.pos):
                     self.buff_up(self.buff_00)
                 elif buff_01_rect.collidepoint(event.pos):
@@ -531,16 +559,22 @@ class Game:
     def buff_up(self, buff):
         if buff.asset == 'dmg':
             self.player.damage += 2
+            print('damage up')
         elif buff.asset == 'hp':
             self.player.health += 1
+            print('hp up')
         elif buff.asset == 'mvs':
             self.player.mvspd += 0.25
+            print('movespeed up')
         elif buff.asset == 'ats':
             self.player.atkspd -= (self.player.atkspd * 0.2)
+            print('attackspeed up')
         elif buff.asset == 'sht':
             self.player.bullets_per_shot += 1
+            print('more bullets')
         elif buff.asset == 'dsh':
             self.player.dash_cd -= (self.player.dash_cd * 0.2)
+            print('dash cooldown down')
         self.level_up()
 
     def level_up(self):
@@ -562,6 +596,10 @@ class Game:
 
     def is_paused(self):
         self.game_state = 'paused'
+        self.run_time = pygame.time.get_ticks() - self.pause_time
+
+    def is_leveling(self):
+        self.game_state = 'leveling'
         self.run_time = pygame.time.get_ticks() - self.pause_time
 
     def spawn_enemies_student(self, current_time):
@@ -750,15 +788,9 @@ class Game:
             Enemy(self, enemy_pos, boss_size, boss_hp, boss_speed, boss_xp_worth, 'boss', 0))
 
     def paused(self):
-
         exit_rect = self.exit.rect()
 
         if exit_rect.collidepoint(pygame.mouse.get_pos()):
             self.exit.render(self.display, 'exit', 1)
         else:
             self.exit.render(self.display, 'exit', 0)
-
-        for event in pygame.event.get():
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if exit_rect.collidepoint(event.pos):
-                    pass
