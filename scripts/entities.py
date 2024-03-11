@@ -1,21 +1,17 @@
 import pygame
 import math
 import sys
-from scripts.utils import Timer
-
 class Player:
     def __init__(self, game, pos, size):
         self.game = game
         self.pos = list(pos)
         self.size = size
 
-        self.timer = Timer()
-
         # player stats
         self.base_hp = 4
         self.health = self.base_hp
 
-        self.base_damage = 10
+        self.base_damage = 3
         self.damage = self.base_damage
 
         self.base_mvspd = 3
@@ -27,7 +23,7 @@ class Player:
         self.base_bullets_per_shot = 1
         self.bullets_per_shot = self.base_bullets_per_shot
 
-        self.base_dash_cd = 8000
+        self.base_dash_cd = 10000
         self.dash_cd = self.base_dash_cd
 
         self.invul = False
@@ -85,9 +81,9 @@ class Player:
             self.health -= damage
             self.mvspd += mvspd_buff
 
-    def apply_invulnerability(self):
+    def apply_invulnerability(self, run_time):
         self.invul = True
-        self.invul_timer = self.timer.get_elapsed_time()
+        self.invul_timer = run_time
 
 
 class Camera:

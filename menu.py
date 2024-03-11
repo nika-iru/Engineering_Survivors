@@ -144,9 +144,6 @@ class Menu:
             if self.current_state == 'Menu':
                 self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))
             elif self.current_state == 'Game':
-                pygame.mixer.music.load(self.assets['bgm'])
-                pygame.mixer.music.set_volume(0.3)
-                pygame.mixer.music.play()
                 self.game_instance.run()
 
             pygame.display.update()

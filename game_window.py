@@ -29,6 +29,7 @@ class Game:
             'staff': load_images('enemy/staff'),
             'boss': load_images('enemy/boss'),
             'background': load_images('background'),
+            'game_over': load_image('game_over.png'),
             'bullet': load_images('bullet'),
             'dmg': load_images('level/buffs/dmg'),
             'mvs': load_images('level/buffs/mvs'),
@@ -41,7 +42,8 @@ class Game:
             'menu': load_images('button/menu'),
 
             'bgm': load_music('bgm/usagi_flap.mp3'),
-            'boss_bgm': load_music('boss/unwelcome_school.mp3')
+            'boss_bgm': load_music('boss/unwelcome_school.mp3'),
+            'over_bgm': load_music('game_over/moment.mp3')
 
         }
 
@@ -57,6 +59,7 @@ class Game:
         # player movement
         self.movement = [False, False, False, False]
         self.dash_time = 0
+        self.score = ''
 
         mouse_x, mouse_y = pygame.mouse.get_pos()
         direction = self.camera.apply_inverse(pygame.Vector2(mouse_x, mouse_y))
@@ -105,6 +108,7 @@ class Game:
         self.second_time = 0
         self.pause_time = 0
         self.run_time = self.timer.get_elapsed_time() - self.pause_time
+        self.game_over_time = 0
 
         self.dmg = Card(self, self.assets['dmg'][0].get_size(), [0,0], 'dmg')
         self.ats = Card(self, self.assets['ats'][0].get_size(), [0,0], 'ats')
@@ -229,22 +233,43 @@ class Game:
                     except ValueError:
                         pass
 
-                self.display.blit(self.assets['background'][1], (0,0))
+                self.display.blit(pygame.transform.scale(self.assets['game_over'], self.screen.get_size()), (0, 0))
                 font = pygame.font.Font(None, 128)
-                text = font.render("Game Over", True, (247, 17, 17))
-                self.display.blit(text, (self.screen.get_width() // 2 - text.get_width() // 2,
-                                         self.screen.get_height() // 2 - text.get_height() // 2))
+                text = font.render("Game Over", True, (255, 59, 33))
+                self.display.blit(text, (self.screen.get_width() // 2 - text.get_width() // 2, 60))
+
+                font = pygame.font.Font(None, 64)
+                text = font.render(f'Score: {self.player.totalXP}', True, (240, 240, 240))
+                self.display.blit(text, (self.screen.get_width() // 4 - text.get_width() // 2, 180))
+
+                font = pygame.font.Font(None, 64)
+                text = font.render(f'Run Time: {self.game_over_time} seconds', True, (240, 240, 240))
+                self.display.blit(text, ((self.screen.get_width() // 4 + (self.screen.get_width() // 2) ) - text.get_width() // 2, 180))
+
+                font = pygame.font.Font(None, 64)
+                text = font.render(f'Grade: {self.score}', True, (240, 240, 240))
+                self.display.blit(text, (
+                (self.screen.get_width() // 2) - text.get_width() // 2, 220))
 
                 self.paused()
 
 
             self.check_player_xp()
 
-            if pygame.mixer.music.get_busy() == True:
-                pass
-            else:
-                pygame.mixer.music.load(self.assets['bgm'])
-                pygame.mixer.music.play(-1)
+            if self.game_state != 'game_over':
+                if pygame.mixer.music.get_busy() == True:
+                    pass
+                else:
+                    pygame.mixer.music.load(self.assets['bgm'])
+                    pygame.mixer.music.play(-1)
+
+            elif self.game_state == 'game_over':
+                if pygame.mixer.music.get_busy() == True:
+                    pass
+                else:
+                    pygame.mixer.music.load(self.assets['over_bgm'])
+                    pygame.mixer.music.play(-1)
+                    pygame.mixer.music.set_volume(0.6)
 
             self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))
             pygame.display.flip()
@@ -384,16 +409,16 @@ class Game:
                 enemy_rect = enemy.rect()
                 if enemy.asset == 'boss' and player_rect.colliderect(enemy_rect):
                     self.player.take_dmg(2)
-                    self.player.apply_invulnerability()
+                    self.player.apply_invulnerability(self.run_time)
                 elif player_rect.colliderect(enemy_rect):
                     self.player.take_dmg(1)
-                    self.player.apply_invulnerability()
+                    self.player.apply_invulnerability(self.run_time)
             for bullet in self.enemy_bullets:
                 bullet_rect = bullet.rect()
                 player_rect = self.player.rect()
                 if bullet_rect.colliderect(player_rect):
                     self.player.take_dmg(1)
-                    self.player.apply_invulnerability()
+                    self.player.apply_invulnerability(self.run_time)
                     try:
                         self.enemy_bullets.remove(bullet)
                     except ValueError:
@@ -403,11 +428,12 @@ class Game:
                 player_rect = self.player.rect()
                 if bullet_rect.colliderect(player_rect):
                     self.player.take_dmg(1)
-                    self.player.apply_invulnerability()
+                    self.player.apply_invulnerability(self.run_time)
                     try:
                         self.boss_bullets.remove(bullet)
                     except ValueError:
                         pass
+
 
         if self.player.invul:
             current_time = self.run_time
@@ -423,7 +449,7 @@ class Game:
         self.check_current_chunk()
 
         if self.player.health <= 0:
-            self.game_state = 'game_over'
+            self.game_over()
 
         for bullet in self.bullets:
             bullet.update()
@@ -635,7 +661,19 @@ class Game:
     def game_over(self):
         self.game_state = 'game_over'
         self.run_time = self.timer.get_elapsed_time() - self.pause_time
+        pygame.mixer.music.stop()
+        pygame.mixer.music.load(self.assets['over_bgm'])
+        pygame.mixer.music.play()
+        self.game_over_time = self.second_time
 
+        if self.player.totalXP >= 500:
+            self.score = '1'
+        elif 240 <= self.player.totalXP < 500:
+            self.score = '2'
+        elif self.player.totalXP < 240:
+            self.score = '3'
+        elif self.player.totalXP < 240:
+            self.score = 'IP'
     def spawn_enemies_student(self, current_time):
 
         spawn_interval = 5000
