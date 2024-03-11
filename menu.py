@@ -24,8 +24,10 @@ class Menu:
             'select': load_image('menu/selector.png'),
             'play': load_images('button/play'),
             'exit': load_images('button/exit'),
+            'info': load_images('button/info'),
+            'instructions': load_image('menu/info.png'),
             'clouds': load_images('menu/clouds'),
-            'menu_bg': load_image('menu/menu_bg.png'),
+            'menu_bg': load_image('menu/menu_bg_v2.png'),
             'menu_bgm': load_music('menu/constant_moderato.mp3'),
             'hover': load_sfx('sfx/hover.mp3'),
             'bgm':load_music('bgm/usagi_flap.mp3')
@@ -33,7 +35,8 @@ class Menu:
         }
 
         self.play = Button(self, self.assets['play'][0].get_size(), ((960 // 2 - self.assets['play'][0].get_width() // 2), (540 // 2 - self.assets['play'][0].get_height()) + 90))
-        self.exit = Button(self, self.assets['exit'][0].get_size(), ((960 // 2 - self.assets['exit'][0].get_width() // 2), (540 // 2 - self.assets['exit'][0].get_height()) + 210))
+        self.info = Button(self, self.assets['info'][0].get_size(), ((960 // 2 - self.assets['info'][0].get_width() // 2), (540 // 2 - self.assets['info'][0].get_height()) + 165))
+        self.exit = Button(self, self.assets['exit'][0].get_size(), ((960 // 2 - self.assets['exit'][0].get_width() // 2), (540 // 2 - self.assets['exit'][0].get_height()) + 240))
         self.select = Button(self, self.assets['select'].get_size(), (0, 0))
 
         self.clock = pygame.time.Clock()
@@ -48,6 +51,8 @@ class Menu:
         self.clouds_to_remove = []
         
         self.bgm = 'paused'
+
+        self.instructions = False
 
         self.is_hovered = False
 
@@ -74,6 +79,7 @@ class Menu:
 
             play_rect = self.play.rect()
             exit_rect = self.exit.rect()
+            info_rect = self.info.rect()
 
             if play_rect.collidepoint(pygame.mouse.get_pos()):
                 self.play.render(self.display, 'play', 1)
@@ -86,18 +92,29 @@ class Menu:
             else:
                 self.play.render(self.display, 'play', 0)
 
+            if info_rect.collidepoint(pygame.mouse.get_pos()):
+                self.info.render(self.display, 'info', 1)
+
+                self.select.pos = (
+                (960 // 2 - self.assets['select'].get_width() // 2) - (self.assets['play'][0].get_width() // 2) - 30,
+                (540 // 2 - self.assets['select'].get_height()) + 155)
+
+                self.select.select(self.display)
+            else:
+                self.info.render(self.display, 'info', 0)
+
             if exit_rect.collidepoint(pygame.mouse.get_pos()):
                 self.exit.render(self.display, 'exit', 1)
 
                 self.select.pos = (
                 (960 // 2 - self.assets['select'].get_width() // 2) - (self.assets['play'][0].get_width() // 2) - 30,
-                (540 // 2 - self.assets['select'].get_height()) + 200)
+                (540 // 2 - self.assets['select'].get_height()) + 230)
 
                 self.select.select(self.display)
             else:
                 self.exit.render(self.display, 'exit', 0)
 
-            if play_rect.collidepoint(pygame.mouse.get_pos()) or exit_rect.collidepoint(pygame.mouse.get_pos()):
+            if play_rect.collidepoint(pygame.mouse.get_pos()) or exit_rect.collidepoint(pygame.mouse.get_pos()) or info_rect.collidepoint((pygame.mouse.get_pos())):
                 self.hover()
             else:
                 self.is_hovered = False
@@ -106,13 +123,23 @@ class Menu:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
-                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if play_rect.collidepoint(event.pos):
                         self.current_state = 'Game'
                         pygame.mixer.music.stop()
+                    elif info_rect.collidepoint(event.pos):
+                        self.instructions = True
                     elif exit_rect.collidepoint(event.pos):
                         pygame.quit()
                         sys.exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        self.instructions = False
+
+            if self.instructions == True:
+                self.display.blit(self.assets['instructions'], (
+                self.screen.get_width() // 2 - self.assets['instructions'].get_width() // 2,
+                self.screen.get_height() // 2 - self.assets['instructions'].get_height() // 2))
 
             if self.current_state == 'Menu':
                 self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))

@@ -1,12 +1,15 @@
 import pygame
 import math
 import sys
+from scripts.utils import Timer
 
 class Player:
     def __init__(self, game, pos, size):
         self.game = game
         self.pos = list(pos)
         self.size = size
+
+        self.timer = Timer()
 
         # player stats
         self.base_hp = 4
@@ -50,10 +53,6 @@ class Player:
         self.pos[0] += dx * self.mvspd
         self.pos[1] += dy * self.mvspd
 
-        if self.health <= 0:
-            pygame.quit()
-            sys.exit()
-
     def dash(self, camera):
         mouse_x, mouse_y = camera.apply_inverse(pygame.mouse.get_pos())
 
@@ -85,11 +84,10 @@ class Player:
         if not self.invul:
             self.health -= damage
             self.mvspd += mvspd_buff
-            print('dmg taken')
 
     def apply_invulnerability(self):
         self.invul = True
-        self.invul_timer = pygame.time.get_ticks()
+        self.invul_timer = self.timer.get_elapsed_time()
 
 
 class Camera:

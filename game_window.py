@@ -123,7 +123,7 @@ class Game:
 
         self.menu = Button(self, self.assets['menu'][0].get_size(), (
             (960 // 2 - self.assets['menu'][0].get_width() // 2),
-            (540 // 2 - self.assets['menu'][0].get_height() // 2)))
+            (360)))
 
     def run(self):
         self.timer.reset_timer()
@@ -191,7 +191,7 @@ class Game:
                     if event.key == pygame.K_s:
                         self.movement[3] = False
 
-                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.game_state == 'paused':
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and (self.game_state == 'game_over' or self.game_state == 'paused'):
                     menu_rect = self.menu.rect()
 
                     if menu_rect.collidepoint(event.pos):
@@ -221,6 +221,22 @@ class Game:
                 self.paused()
             elif self.game_state == 'leveling':
                 self.pause_time = self.timer.get_elapsed_time() - self.run_time
+
+            elif self.game_state == 'game_over':
+                for enemy in self.enemies:
+                    try:
+                        self.enemies.remove(enemy)
+                    except ValueError:
+                        pass
+
+                self.display.blit(self.assets['background'][1], (0,0))
+                font = pygame.font.Font(None, 128)
+                text = font.render("Game Over", True, (247, 17, 17))
+                self.display.blit(text, (self.screen.get_width() // 2 - text.get_width() // 2,
+                                         self.screen.get_height() // 2 - text.get_height() // 2))
+
+                self.paused()
+
 
             self.check_player_xp()
 
@@ -405,6 +421,9 @@ class Game:
         self.camera.target = self.player.center()
 
         self.check_current_chunk()
+
+        if self.player.health <= 0:
+            self.game_state = 'game_over'
 
         for bullet in self.bullets:
             bullet.update()
@@ -611,6 +630,10 @@ class Game:
 
     def is_leveling(self):
         self.game_state = 'leveling'
+        self.run_time = self.timer.get_elapsed_time() - self.pause_time
+
+    def game_over(self):
+        self.game_state = 'game_over'
         self.run_time = self.timer.get_elapsed_time() - self.pause_time
 
     def spawn_enemies_student(self, current_time):
