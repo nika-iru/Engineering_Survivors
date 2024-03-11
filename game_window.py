@@ -38,6 +38,7 @@ class Game:
             'sht': load_images('level/buffs/sht'),
             'dsh': load_images('level/buffs/dsh'),
             'health': load_image('sprites/hp.png'),
+            'hover': load_sfx('sfx/hover.mp3'),
 
             'menu': load_images('button/menu'),
 
@@ -50,6 +51,8 @@ class Game:
         self.return_to_menu = return_to_menu
 
         self.timer = Timer()
+
+        self.is_hovered = False
 
         # player initialization
         player_size = self.assets['player'][0].get_size()
@@ -599,6 +602,12 @@ class Game:
         elif buff_02_rect.collidepoint(pygame.mouse.get_pos()):
             self.buff_02.render(self.display, 1)
 
+        if buff_00_rect.collidepoint(pygame.mouse.get_pos()) or buff_01_rect.collidepoint(
+                pygame.mouse.get_pos()) or buff_02_rect.collidepoint((pygame.mouse.get_pos())):
+            self.hover()
+        else:
+            self.is_hovered = False
+
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.game_state == 'leveling':
                 buff_00_rect = self.buff_00.rect()
@@ -670,9 +679,9 @@ class Game:
             self.score = '1'
         elif 240 <= self.player.totalXP < 500:
             self.score = '2'
-        elif self.player.totalXP < 240:
+        elif 180 <= self.player.totalXP < 240:
             self.score = '3'
-        elif self.player.totalXP < 240:
+        elif self.player.totalXP < 180:
             self.score = 'IP'
     def spawn_enemies_student(self, current_time):
 
@@ -864,8 +873,15 @@ class Game:
 
         if menu_rect.collidepoint(pygame.mouse.get_pos()):
             self.menu.render(self.display, 'menu', 1)
+            self.hover()
         else:
             self.menu.render(self.display, 'menu', 0)
+            self.is_hovered = False
+
+    def hover(self):
+        if self.is_hovered == False:
+            self.assets['hover'].play()
+            self.is_hovered = True
 
     def change_to_menu(self):
         menu_instance = menu.Menu()
