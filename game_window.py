@@ -792,7 +792,7 @@ class Game:
 
         staff_size = self.assets['staff'][0].get_size()
         staff_hp = 24
-        staff_speed = 3.6
+        staff_speed = 3.4
         staff_xp_worth = 6
 
         if current_time - self.spawn_timer_staff >= spawn_interval:
