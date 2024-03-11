@@ -29,3 +29,15 @@ def load_sfx(path):
     sfx_path = BASE_SFX_PATH + path
     sfx = pygame.mixer.Sound(sfx_path)
     return sfx
+
+import pygame
+
+class Timer:
+    def __init__(self):
+        self.start_time = pygame.time.get_ticks()
+
+    def get_elapsed_time(self):
+        return pygame.time.get_ticks() - self.start_time
+
+    def reset_timer(self):
+        self.start_time = pygame.time.get_ticks()

@@ -3,12 +3,13 @@ import sys
 import random
 import math
 
-from scripts.utils import load_image, load_images, load_music, load_sfx
+from scripts.utils import load_image, load_images, load_music, load_sfx, Timer
 from scripts.entities import Player, Enemy, Bullet, Camera, Background, Chunk, Card, Sprite
 from scripts.menu_utils import Button
+from importlib import reload
 
 class Game:
-    def __init__(self):
+    def __init__(self, return_to_menu):
 
         pygame.init()
         pygame.mixer.init()
@@ -37,12 +38,16 @@ class Game:
             'dsh': load_images('level/buffs/dsh'),
             'health': load_image('sprites/hp.png'),
 
-            'exit': load_images('menu/button/exit'),
+            'menu': load_images('button/menu'),
 
             'bgm': load_music('bgm/usagi_flap.mp3'),
             'boss_bgm': load_music('boss/unwelcome_school.mp3')
 
         }
+
+        self.return_to_menu = return_to_menu
+
+        self.timer = Timer()
 
         # player initialization
         player_size = self.assets['player'][0].get_size()
@@ -66,14 +71,14 @@ class Game:
         self.bullets = []
         self.second_shot = 0
         self.third_shot = 0
-        self.current_time_of_shot = pygame.time.get_ticks()
+        self.current_time_of_shot = self.timer.get_elapsed_time()
 
         self.enemies = []
-        self.spawn_timer_students = pygame.time.get_ticks()
-        self.spawn_timer_guards = pygame.time.get_ticks()
-        self.spawn_timer_staff = pygame.time.get_ticks()
-        self.enemy_shoot_timer = pygame.time.get_ticks()
-        self.boss_shoot_timer = pygame.time.get_ticks()
+        self.spawn_timer_students = self.timer.get_elapsed_time()
+        self.spawn_timer_guards = self.timer.get_elapsed_time()
+        self.spawn_timer_staff = self.timer.get_elapsed_time()
+        self.enemy_shoot_timer = self.timer.get_elapsed_time()
+        self.boss_shoot_timer = self.timer.get_elapsed_time()
         self.enemy_bullets = []
         self.boss_bullets = []
         self.boss_dash_time = 0
@@ -99,7 +104,7 @@ class Game:
 
         self.second_time = 0
         self.pause_time = 0
-        self.run_time = pygame.time.get_ticks() - self.pause_time
+        self.run_time = self.timer.get_elapsed_time() - self.pause_time
 
         self.dmg = Card(self, self.assets['dmg'][0].get_size(), [0,0], 'dmg')
         self.ats = Card(self, self.assets['ats'][0].get_size(), [0,0], 'ats')
@@ -116,11 +121,12 @@ class Game:
         self.game_state = 'running'
         self.boss_fight = False
 
-        self.exit = Button(self, self.assets['exit'][0].get_size(), (
-            (960 // 2 - self.assets['exit'][0].get_width() // 2),
-            (540 // 2 - self.assets['exit'][0].get_height()) + 210))
+        self.menu = Button(self, self.assets['menu'][0].get_size(), (
+            (960 // 2 - self.assets['menu'][0].get_width() // 2),
+            (540 // 2 - self.assets['menu'][0].get_height() // 2)))
 
     def run(self):
+        self.timer.reset_timer()
         while True:
 
             self.display.fill((15, 220, 250))
@@ -147,7 +153,7 @@ class Game:
             for enemy in self.enemies:
                 enemy.render(self.display, self.camera, self.player)
 
-            current_time = pygame.time.get_ticks()
+            current_time = self.timer.get_elapsed_time()
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -186,12 +192,11 @@ class Game:
                         self.movement[3] = False
 
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.game_state == 'paused':
-                    exit_rect = self.exit.rect()
+                    menu_rect = self.menu.rect()
 
-                    print('mb1 clicked')
-                    if exit_rect.collidepoint(event.pos):
-                        import menu
-                        menu.Menu.game_instance = 'Menu'
+                    if menu_rect.collidepoint(event.pos):
+                        print('mb1 clicked')
+                        self.return_to_menu()
 
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.game_state == 'leveling':
                     buff_00_rect = self.buff_00.rect()
@@ -208,14 +213,14 @@ class Game:
             if self.game_state == 'running':
                 self.update_game()
             elif self.game_state == 'paused':
-                self.pause_time = pygame.time.get_ticks() - self.run_time
+                self.pause_time = self.timer.get_elapsed_time() - self.run_time
                 font = pygame.font.Font(None, 128)
                 text = font.render("Paused", True, (0, 0, 0))
                 self.display.blit(text, (self.screen.get_width() // 2 - text.get_width() // 2, self.screen.get_height() // 2 - text.get_height() // 2))
 
                 self.paused()
             elif self.game_state == 'leveling':
-                self.pause_time = pygame.time.get_ticks() - self.run_time
+                self.pause_time = self.timer.get_elapsed_time() - self.run_time
 
 
             self.check_player_xp()
@@ -223,7 +228,7 @@ class Game:
             self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))
             pygame.display.flip()
 
-            '''print(f'Total Run Time: {self.run_time}\nTotal Pause Time: {self.pause_time}\nTotal Tick Time: {pygame.time.get_ticks()}')'''
+            '''print(f'Total Run Time: {self.run_time}\nTotal Pause Time: {self.pause_time}\nTotal Tick Time: {self.timer.get_elapsed_time()}')'''
 
     def shoot_bullet(self, current_time):
         mouse_x, mouse_y = pygame.mouse.get_pos()
@@ -390,7 +395,7 @@ class Game:
                 self.player.mvspd = self.player.base_spd
 
     def update_game(self):
-        self.run_time = pygame.time.get_ticks() - self.pause_time
+        self.run_time = self.timer.get_elapsed_time() - self.pause_time
         self.player.update(((self.movement[1] - self.movement[0]), (self.movement[3] - self.movement[2])))
         self.camera.target = self.player.center()
 
@@ -588,7 +593,7 @@ class Game:
 
     def is_running(self):
         self.game_state = 'running'
-        self.run_time = pygame.time.get_ticks() - self.pause_time
+        self.run_time = self.timer.get_elapsed_time() - self.pause_time
         self.movement[0] = False
         self.movement[1] = False
         self.movement[2] = False
@@ -596,11 +601,11 @@ class Game:
 
     def is_paused(self):
         self.game_state = 'paused'
-        self.run_time = pygame.time.get_ticks() - self.pause_time
+        self.run_time = self.timer.get_elapsed_time() - self.pause_time
 
     def is_leveling(self):
         self.game_state = 'leveling'
-        self.run_time = pygame.time.get_ticks() - self.pause_time
+        self.run_time = self.timer.get_elapsed_time() - self.pause_time
 
     def spawn_enemies_student(self, current_time):
 
@@ -788,9 +793,15 @@ class Game:
             Enemy(self, enemy_pos, boss_size, boss_hp, boss_speed, boss_xp_worth, 'boss', 0))
 
     def paused(self):
-        exit_rect = self.exit.rect()
+        menu_rect = self.menu.rect()
 
-        if exit_rect.collidepoint(pygame.mouse.get_pos()):
-            self.exit.render(self.display, 'exit', 1)
+        if menu_rect.collidepoint(pygame.mouse.get_pos()):
+            self.menu.render(self.display, 'menu', 1)
         else:
-            self.exit.render(self.display, 'exit', 0)
+            self.menu.render(self.display, 'menu', 0)
+
+    def change_to_menu(self):
+        menu_instance = menu.Menu()
+        menu_instance.change_state_to_menu()
+
+import menu

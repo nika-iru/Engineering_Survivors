@@ -1,7 +1,7 @@
 import pygame
 import sys
 import random
-from scripts.utils import load_image, load_images, load_music, load_sfx
+from scripts.utils import load_image, load_images, load_music, load_sfx, Timer
 from scripts.menu_utils import Button, Cloud
 import game_window
 
@@ -17,11 +17,13 @@ class Menu:
 
         self.display = pygame.Surface((960, 540))
 
+        self.timer = Timer()
+
         self.assets = {
 
             'select': load_image('menu/selector.png'),
-            'play': load_images('menu/button/play'),
-            'exit': load_images('menu/button/exit'),
+            'play': load_images('button/play'),
+            'exit': load_images('button/exit'),
             'clouds': load_images('menu/clouds'),
             'menu_bg': load_image('menu/menu_bg.png'),
             'menu_bgm': load_music('menu/constant_moderato.mp3'),
@@ -36,12 +38,12 @@ class Menu:
 
         self.clock = pygame.time.Clock()
 
-        self.game_instance = game_window.Game()
+        self.game_instance = game_window.Game(self.return_to_menu)
 
         self.current_state = 'Menu'
         
-        self.run_time = pygame.time.get_ticks()
-        self.spawn_cloud = pygame.time.get_ticks()
+        self.run_time = self.timer.get_elapsed_time()
+        self.spawn_cloud = self.timer.get_elapsed_time()
         self.clouds = []
         self.clouds_to_remove = []
         
@@ -50,8 +52,10 @@ class Menu:
         self.is_hovered = False
 
     def run(self):
+        self.current_state = 'Menu'
+        self.timer.reset_timer()
         while True:
-            self.run_time = pygame.time.get_ticks()
+            self.run_time = self.timer.get_elapsed_time()
 
             if self.bgm != 'playing':
                 self.play_bgm()
@@ -103,9 +107,8 @@ class Menu:
                     pygame.quit()
                     sys.exit()
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    print('mb1 clicked')
                     if play_rect.collidepoint(event.pos):
-                        self.current_state = 'Game'  # Switch to the Game state
+                        self.current_state = 'Game'
                         pygame.mixer.music.stop()
                     elif exit_rect.collidepoint(event.pos):
                         pygame.quit()
@@ -152,5 +155,12 @@ class Menu:
         if self.is_hovered == False:
             self.assets['hover'].play()
             self.is_hovered = True
+
+    def return_to_menu(self):
+        # Reset any game-specific state if needed
+        self.current_state = 'Menu'
+        pygame.mixer.music.load(self.assets['menu_bgm'])
+        pygame.mixer.music.play(loops=-1)
+        Menu().run()
 
 Menu().run()
