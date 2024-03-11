@@ -1,5 +1,4 @@
 import os
-
 import pygame
 
 BASE_IMG_PATH = 'data/img/'
@@ -9,6 +8,7 @@ BASE_MUSIC_PATH = 'data/music/'
 BASE_SFX_PATH = 'data/music/'
 
 pygame.mixer.init()
+pygame.init()
 
 def load_image(path):
     img = pygame.image.load(BASE_IMG_PATH + path).convert_alpha()
@@ -29,8 +29,6 @@ def load_sfx(path):
     sfx_path = BASE_SFX_PATH + path
     sfx = pygame.mixer.Sound(sfx_path)
     return sfx
-
-import pygame
 
 class Timer:
     def __init__(self):

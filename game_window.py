@@ -531,7 +531,7 @@ class Game:
             self.spawn_boss()
 
         if self.boss_fight == True:
-            if len(self.enemies) <= 21:
+            if len(self.enemies) <= 26:
                 self.spawn_enemies_staff(current_time)
                 self.spawn_enemies_guard(current_time)
 
