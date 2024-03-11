@@ -128,7 +128,7 @@ class Menu:
     def play_bgm(self):
         pygame.mixer.music.load(self.assets['menu_bgm'])
         pygame.mixer.music.set_volume(0.6)
-        pygame.mixer.music.play(loops=-1)
+        pygame.mixer.music.play(-1)
 
     def render(self, current_time):
         cloud_interval = 4000
@@ -160,7 +160,7 @@ class Menu:
         # Reset any game-specific state if needed
         self.current_state = 'Menu'
         pygame.mixer.music.load(self.assets['menu_bgm'])
-        pygame.mixer.music.play(loops=-1)
+        pygame.mixer.music.play(-1)
         Menu().run()
 
 Menu().run()

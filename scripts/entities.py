@@ -2,7 +2,6 @@ import pygame
 import math
 import sys
 
-
 class Player:
     def __init__(self, game, pos, size):
         self.game = game

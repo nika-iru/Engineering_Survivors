@@ -145,7 +145,7 @@ class Game:
                 bullet.render(self.display, self.camera, 0)
 
             for enemy_bullet in self.enemy_bullets:
-                enemy_bullet.render(self.display, self.camera, 0)
+                enemy_bullet.render(self.display, self.camera, 2)
 
             for boss_bullet in self.boss_bullets:
                 boss_bullet.render(self.display, self.camera, 1)
@@ -222,8 +222,13 @@ class Game:
             elif self.game_state == 'leveling':
                 self.pause_time = self.timer.get_elapsed_time() - self.run_time
 
-
             self.check_player_xp()
+
+            if pygame.mixer.music.get_busy() == True:
+                pass
+            else:
+                pygame.mixer.music.load(self.assets['bgm'])
+                pygame.mixer.music.play(-1)
 
             self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))
             pygame.display.flip()
@@ -480,6 +485,7 @@ class Game:
         if self.boss_fight == True:
             if len(self.enemies) <= 21:
                 self.spawn_enemies_staff(current_time)
+                self.spawn_enemies_guard(current_time)
 
         self.check_player_invul()
 
@@ -550,9 +556,9 @@ class Game:
 
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and self.game_state == 'leveling':
-                buff_00_rect = self.buff_00.rect
-                buff_01_rect = self.buff_01.rect
-                buff_02_rect = self.buff_02.rect
+                buff_00_rect = self.buff_00.rect()
+                buff_01_rect = self.buff_01.rect()
+                buff_02_rect = self.buff_02.rect()
 
                 if buff_00_rect.collidepoint(event.pos):
                     self.buff_up(self.buff_00)
@@ -613,7 +619,7 @@ class Game:
 
         student_size = self.assets['student'][0].get_size()
 
-        student_hp = 5
+        student_hp = 9
         student_speed = 2.5
         student_xp_worth = 2
 
@@ -664,7 +670,7 @@ class Game:
         spawn_interval = 6000
 
         guard_size = self.assets['student'][0].get_size()
-        guard_hp = 12
+        guard_hp = 21
         guard_speed = 1.5
         guard_xp_worth = 5
 
@@ -715,7 +721,7 @@ class Game:
         spawn_interval = 4000
 
         staff_size = self.assets['staff'][0].get_size()
-        staff_hp = 15
+        staff_hp = 26
         staff_speed = 3.6
         staff_xp_worth = 4
 
