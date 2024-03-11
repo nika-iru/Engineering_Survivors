@@ -6,7 +6,6 @@ import math
 from scripts.utils import load_image, load_images, load_music, load_sfx, Timer
 from scripts.entities import Player, Enemy, Bullet, Camera, Background, Chunk, Card, Sprite
 from scripts.menu_utils import Button
-from importlib import reload
 
 class Game:
     def __init__(self, return_to_menu):
@@ -242,17 +241,17 @@ class Game:
                 self.display.blit(text, (self.screen.get_width() // 2 - text.get_width() // 2, 60))
 
                 font = pygame.font.Font(None, 64)
-                text = font.render(f'Score: {self.player.totalXP}', True, (240, 240, 240))
-                self.display.blit(text, (self.screen.get_width() // 4 - text.get_width() // 2, 180))
-
-                font = pygame.font.Font(None, 64)
                 text = font.render(f'Run Time: {self.game_over_time} seconds', True, (240, 240, 240))
-                self.display.blit(text, ((self.screen.get_width() // 4 + (self.screen.get_width() // 2) ) - text.get_width() // 2, 180))
+                self.display.blit(text, ((self.screen.get_width() // 2) - text.get_width() // 2, 160))
 
                 font = pygame.font.Font(None, 64)
+                text = font.render(f'Score: {self.player.totalXP}', True, (240, 240, 240))
+                self.display.blit(text, (self.screen.get_width() // 2 - text.get_width() // 2, 225))
+                font = pygame.font.Font(None, 64)
+
                 text = font.render(f'Grade: {self.score}', True, (240, 240, 240))
                 self.display.blit(text, (
-                (self.screen.get_width() // 2) - text.get_width() // 2, 220))
+                (self.screen.get_width() // 2) - text.get_width() // 2, 290))
 
                 self.paused()
 
@@ -265,6 +264,7 @@ class Game:
                 else:
                     pygame.mixer.music.load(self.assets['bgm'])
                     pygame.mixer.music.play(-1)
+                    pygame.mixer.music.set_volume(0.3)
 
             elif self.game_state == 'game_over':
                 if pygame.mixer.music.get_busy() == True:
@@ -272,7 +272,7 @@ class Game:
                 else:
                     pygame.mixer.music.load(self.assets['over_bgm'])
                     pygame.mixer.music.play(-1)
-                    pygame.mixer.music.set_volume(0.6)
+                    pygame.mixer.music.set_volume(0.3)
 
             self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))
             pygame.display.flip()
@@ -791,9 +791,9 @@ class Game:
         spawn_interval = 4000
 
         staff_size = self.assets['staff'][0].get_size()
-        staff_hp = 26
+        staff_hp = 24
         staff_speed = 3.6
-        staff_xp_worth = 4
+        staff_xp_worth = 6
 
         if current_time - self.spawn_timer_staff >= spawn_interval:
             for enemiesToSpawn in range(0, 2):
