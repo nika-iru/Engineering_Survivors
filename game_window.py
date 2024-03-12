@@ -2,6 +2,7 @@ import pygame
 import sys
 import random
 import math
+import os
 
 from scripts.utils import load_image, load_images, load_music, load_sfx, Timer
 from scripts.entities import Player, Enemy, Bullet, Camera, Background, Chunk, Card, Sprite
@@ -62,6 +63,7 @@ class Game:
         self.movement = [False, False, False, False]
         self.dash_time = 0
         self.score = ''
+        self.prev = ''
 
         mouse_x, mouse_y = pygame.mouse.get_pos()
         direction = self.camera.apply_inverse(pygame.Vector2(mouse_x, mouse_y))
@@ -250,7 +252,11 @@ class Game:
 
                 text = font.render(f'Grade: {self.score}', True, (240, 240, 240))
                 self.display.blit(text, (
-                (self.screen.get_width() // 2) - text.get_width() // 2, 290))
+                ((self.screen.get_width() // 4) - text.get_width() // 2), 290))
+
+                text = font.render(f'Previous: {self.prev}', True, (240, 240, 240))
+                self.display.blit(text, (
+                    ((self.screen.get_width() // 4) * 3  - text.get_width() // 2), 290))
 
                 self.paused()
 
@@ -685,6 +691,24 @@ class Game:
             self.score = '3'
         elif self.player.totalXP < 180:
             self.score = 'IP'
+
+        if os.path.exists("Score/SaveFile/save.txt"):
+            load = open("Score/SaveFile/save.txt", "r")
+            self.prev = load.readline()
+
+        os.makedirs(("Score/SaveFile/"), exist_ok=True)  # create directory
+        score = open("Score/SaveFile/save.txt", "w")  # write
+
+        score.write(self.score)
+
+        score.close()
+
+        print (f'{self.score} saved')
+        if self.prev != '':
+            print (f'previous score: {self.prev}')
+        else:
+            print('no previous run')
+
     def spawn_enemies_student(self, current_time):
 
         spawn_interval = 4000
