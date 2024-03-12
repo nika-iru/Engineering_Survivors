@@ -182,10 +182,9 @@ class Game:
                     if event.key == pygame.K_SPACE:
                         if current_time - self.dash_time >= self.player.dash_cd:
                             self.dash_time = current_time
-                            print(self.dash_time)
                             self.player.dash(self.camera)
                         else:
-                            print(f'dash on cooldown {current_time - self.dash_time}')
+                            print(f'dash on cooldown {(self.player.dash_cd - (current_time - self.dash_time)) // 1000}')
 
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_a:
@@ -513,13 +512,16 @@ class Game:
         '''print (f'There are currently {len(self.enemies)} enemies on the map')'''
 
         if 0 <= self.second_time <= 300 and self.boss_fight == False:
-            if len(self.enemies) <= 15:
+            if len(self.enemies) <= 20:
                 self.spawn_enemies_student(current_time)
 
         if self.second_time >= 240 and self.boss_fight == False:
             if len(self.enemies) <= 30:
-                self.spawn_enemies_guard(current_time)
                 self.spawn_enemies_staff(current_time)
+
+        if self.second_time >= 270 and self.boss_fight == False:
+            if len(self.enemies) <= 30:
+                self.spawn_enemies_guard(current_time)
 
         if self.second_time >= 420 and self.boss_fight == False:
             self.boss_fight = True
@@ -685,7 +687,7 @@ class Game:
             self.score = 'IP'
     def spawn_enemies_student(self, current_time):
 
-        spawn_interval = 5000
+        spawn_interval = 4000
 
         student_size = self.assets['student'][0].get_size()
 
@@ -788,11 +790,11 @@ class Game:
 
     def spawn_enemies_staff(self, current_time):
 
-        spawn_interval = 4000
+        spawn_interval = 5000
 
         staff_size = self.assets['staff'][0].get_size()
         staff_hp = 24
-        staff_speed = 3.4
+        staff_speed = 3.5
         staff_xp_worth = 6
 
         if current_time - self.spawn_timer_staff >= spawn_interval:
