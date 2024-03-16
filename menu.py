@@ -1,9 +1,9 @@
 import pygame
 import sys
 import random
-from scripts.utils import load_image, load_images, load_music, load_sfx, Timer
-from scripts.menu_utils import Button, Cloud
-import game_window
+from assets.scripts.utils import load_image, load_images, load_music, load_sfx, Timer
+from assets.scripts.menu_utils import Button, Cloud
+from assets import game_window
 
 
 class Menu:

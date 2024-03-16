@@ -4,9 +4,9 @@ import random
 import math
 import os
 
-from scripts.utils import load_image, load_images, load_music, load_sfx, Timer
-from scripts.entities import Player, Enemy, Bullet, Camera, Background, Chunk, Card, Sprite
-from scripts.menu_utils import Button
+from assets.scripts.utils import load_image, load_images, load_music, load_sfx, Timer
+from assets.scripts.entities import Player, Enemy, Bullet, Camera, Background, Chunk, Card, Sprite
+from assets.scripts.menu_utils import Button
 
 class Game:
     def __init__(self, return_to_menu):
@@ -236,10 +236,18 @@ class Game:
                     except ValueError:
                         pass
 
-                self.display.blit(pygame.transform.scale(self.assets['game_over'], self.screen.get_size()), (0, 0))
-                font = pygame.font.Font(None, 128)
-                text = font.render("Game Over", True, (255, 59, 33))
-                self.display.blit(text, (self.screen.get_width() // 2 - text.get_width() // 2, 60))
+                if self.score == '1':
+                    self.display.blit(pygame.transform.scale(self.assets['game_over'], self.screen.get_size()), (0, 0))
+                    font = pygame.font.Font(None, 128)
+                    text = font.render("Congratulations!!", True, (40, 230, 0))
+                    self.display.blit(text, (self.screen.get_width() // 2 - text.get_width() // 2, 60))
+
+
+                else:
+                    self.display.blit(pygame.transform.scale(self.assets['game_over'], self.screen.get_size()), (0, 0))
+                    font = pygame.font.Font(None, 128)
+                    text = font.render("Game Over", True, (255, 59, 33))
+                    self.display.blit(text, (self.screen.get_width() // 2 - text.get_width() // 2, 60))
 
                 font = pygame.font.Font(None, 64)
                 text = font.render(f'Run Time: {self.game_over_time} seconds', True, (240, 240, 240))
@@ -870,7 +878,7 @@ class Game:
         boss_size = self.assets['boss'][0].get_size()
         boss_hp = 2400
         boss_speed = 2
-        boss_xp_worth = 0
+        boss_xp_worth = 500
 
         pygame.mixer.music.stop()
         pygame.mixer.music.load(self.assets['boss_bgm'])
@@ -912,5 +920,6 @@ class Game:
     def change_to_menu(self):
         menu_instance = menu.Menu()
         menu_instance.change_state_to_menu()
+
 
 import menu

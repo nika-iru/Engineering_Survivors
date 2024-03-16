@@ -14,7 +14,7 @@ class Player:
         self.base_damage = 3
         self.damage = self.base_damage
 
-        self.base_mvspd = 3
+        self.base_mvspd = 2
         self.mvspd = self.base_mvspd
 
         self.base_atkspd = 2000
@@ -30,7 +30,7 @@ class Player:
         self.invul_timer = 0
 
         self.currentXP = 0
-        self.neededXP = 15
+        self.neededXP = 6
         self.playerlvl = 1
         self.totalXP = 0
 

@@ -1,11 +1,11 @@
 import os
 import pygame
 
-BASE_IMG_PATH = 'data/img/'
+BASE_IMG_PATH = 'assets/data/img/'
 
-BASE_MUSIC_PATH = 'data/music/'
+BASE_MUSIC_PATH = 'assets/data/music/'
 
-BASE_SFX_PATH = 'data/music/'
+BASE_SFX_PATH = 'assets/data/music/'
 
 pygame.mixer.init()
 pygame.init()
